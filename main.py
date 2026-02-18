@@ -71,6 +71,9 @@ FP_STATUS_TYPES = {
 # Refnum qualifier for Data Source
 DATA_SOURCE_QUALIFIER = "DATA_SOURCE"
 
+# OTM WMServlet endpoint for BTF trigger
+OTM_WMSERVLET = "https://otmgtm-a629995.otmgtm.us-phoenix-1.ocs.oraclecloud.com/GC3/glog.integration.servlet.WMServlet"
+
 # ── HELPERS ─────────────────────────────────────────────
 
 def build_search_url(query_name: str, param_value: str) -> str:
@@ -79,13 +82,6 @@ def build_search_url(query_name: str, param_value: str) -> str:
         f"/custom-actions/savedQueries/shipments"
         f"/{OTM_DOMAIN}/{query_name}"
         f"?fields={SEARCH_FIELDS}&expand=statuses,refnums&parameterValue={param_value}"
-    )
-
-def build_detail_url(shipment_xid: str) -> str:
-    return (
-        f"{OTM_BASE}/logisticsRestApi/resources-int/v2"
-        f"/shipments/{OTM_DOMAIN}/{OTM_SUBDOMAIN}.{shipment_xid}"
-        f"?fields={DETAIL_FIELDS}&expand=statuses,refnums"
     )
 
 def extract_xid_from_link(links: list, rel: str = "canonical") -> Optional[str]:
@@ -153,7 +149,6 @@ def parse_shipment(raw: dict) -> dict:
     statuses    = parse_inline_statuses(raw.get("statuses", {}))
     data_source = parse_refnums(raw.get("refnums", {}))
 
-    # FP = has SEND_SHIPMENT_USB status or shipmentAsWork flag
     is_fp = raw.get("shipmentAsWork", False) or "SEND_SHIPMENT_USB" in statuses
 
     return {
@@ -179,6 +174,55 @@ def parse_shipment(raw: dict) -> dict:
         "dataSource":      data_source,
         "statuses":        statuses,
     }
+
+def build_btf_payload(shipment_xid: str) -> str:
+    """Build the XML payload for BTF trigger with the shipment XID injected."""
+    return f"""<?xml version="1.0" encoding="UTF-8"?>
+<otm:Transmission xmlns:otm="http://xmlns.oracle.com/apps/otm/transmission/v6.4" xmlns:gtm="http://xmlns.oracle.com/apps/gtm/transmission/v6.4">
+    <otm:TransmissionHeader>
+        <otm:Refnum>
+            <otm:RefnumQualifierGid>
+                <otm:Gid>
+                    <otm:DomainName>KRAFT/KFNA</otm:DomainName>
+                    <otm:Xid>TYPE</otm:Xid>
+                </otm:Gid>
+            </otm:RefnumQualifierGid>
+            <otm:RefnumValue>BTFTOOTM</otm:RefnumValue>
+        </otm:Refnum>
+        <otm:DataQueueGid>
+            <otm:Gid>
+                <otm:DomainName>KRAFT</otm:DomainName>
+                <otm:Xid>BTFRECON</otm:Xid>
+            </otm:Gid>
+        </otm:DataQueueGid>
+    </otm:TransmissionHeader>
+    <otm:TransmissionBody>
+        <otm:GLogXMLElement>
+            <otm:GenericStatusUpdate>
+                <otm:GenericStatusObjectType>SHIPMENT</otm:GenericStatusObjectType>
+                <otm:Gid>
+                    <otm:DomainName>KRAFT/KFNA</otm:DomainName>
+                    <otm:Xid>{shipment_xid}</otm:Xid>
+                </otm:Gid>
+                <otm:TransactionCode>IU</otm:TransactionCode>
+                <otm:Status>
+                    <otm:StatusTypeGid>
+                        <otm:Gid>
+                            <otm:DomainName>KRAFT/KFNA</otm:DomainName>
+                            <otm:Xid>BTF_RATE_IND</otm:Xid>
+                        </otm:Gid>
+                    </otm:StatusTypeGid>
+                    <otm:StatusValueGid>
+                        <otm:Gid>
+                            <otm:DomainName>KRAFT/KFNA</otm:DomainName>
+                            <otm:Xid>BTF_RATE - REPROCESS</otm:Xid>
+                        </otm:Gid>
+                    </otm:StatusValueGid>
+                </otm:Status>
+            </otm:GenericStatusUpdate>
+        </otm:GLogXMLElement>
+    </otm:TransmissionBody>
+</otm:Transmission>"""
 
 async def fetch_query(client: httpx.AsyncClient, url: str, query_name: str) -> dict:
     try:
@@ -233,6 +277,34 @@ async def search(
         "errors":      [r["error"] for r in results if r["error"]],
         "items":       merged,
     }
+
+
+@app.post("/api/trigger-btf/{shipment_xid}")
+async def trigger_btf(shipment_xid: str):
+    """
+    POST XML payload to OTM WMServlet to trigger BTF pricing
+    for the given shipment XID.
+    """
+    payload = build_btf_payload(shipment_xid)
+    headers = {"Content-Type": "application/xml"}
+
+    try:
+        async with httpx.AsyncClient(verify=False) as client:
+            resp = await client.post(
+                OTM_WMSERVLET,
+                content=payload.encode("utf-8"),
+                headers=headers,
+                auth=(OTM_USER, OTM_PASS),
+                timeout=30,
+            )
+        return {
+            "status":      "ok" if resp.status_code < 400 else "error",
+            "httpStatus":  resp.status_code,
+            "shipmentXid": shipment_xid,
+            "response":    resp.text[:500],
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/api/health")
