@@ -265,7 +265,6 @@ tbody tr.row-fp{background:#fafffe;}
                 <th class="status-col">USB Eligibility</th>
                 <th class="status-col">USB Status</th>
                 <th class="fp-col">FP Status</th>
-                <th class="fp-col">Data Source</th>
               </tr>
             </thead>
             <tbody id="results-body"></tbody>
@@ -352,7 +351,7 @@ function renderResults(data) {
 
   const tbody = document.getElementById('results-body');
   if (!data.items || data.items.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="16" style="text-align:center;padding:32px;color:var(--ink4);">No shipments found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="15" style="text-align:center;padding:32px;color:var(--ink4);">No shipments found.</td></tr>`;
     return;
   }
 
