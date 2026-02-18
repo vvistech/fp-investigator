@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FreightPay Investigator</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Figtree:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:#f0f2f5; --surface:#fff; --surface2:#f7f8fa;
+  --border:#e2e6ed; --border2:#cdd3dc;
+  --ink:#111827; --ink2:#374151; --ink3:#6b7280; --ink4:#9ca3af;
+  --navy:#0f1f3d; --blue:#1d4ed8; --blue-lt:#dbeafe;
+  --teal:#0d9488; --teal-lt:#ccfbf1;
+  --amber:#d97706; --amber-lt:#fef3c7;
+  --red:#dc2626; --red-lt:#fee2e2;
+  --green:#16a34a; --green-lt:#dcfce7;
+  --sidebar-w:220px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:'Figtree',sans-serif;background:var(--bg);color:var(--ink);font-size:14px;}
+.app{display:flex;height:100vh;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;}
+.sb-logo{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.07);margin-bottom:8px;}
+.sb-logo-mark{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;}
+.sb-logo-mark span{color:#38bdf8;}
+.sb-logo-sub{font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:2px;text-transform:uppercase;margin-top:3px;}
+.sb-section{padding:0 10px;margin-bottom:4px;}
+.sb-section-label{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,0.25);padding:10px 8px 5px;}
+.sb-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:7px;color:rgba(255,255,255,0.55);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;margin-bottom:1px;}
+.sb-item:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.85);}
+.sb-item.active{background:rgba(56,189,248,0.15);color:#38bdf8;}
+.sb-icon{font-size:15px;width:18px;text-align:center;}
+.sb-bottom{margin-top:auto;padding:12px 10px;border-top:1px solid rgba(255,255,255,0.07);}
+.sb-user{display:flex;align-items:center;gap:9px;}
+.sb-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#818cf8);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;}
+.sb-user-name{font-size:12px;font-weight:600;color:rgba(255,255,255,0.8);}
+.sb-user-role{font-size:10px;color:rgba(255,255,255,0.3);}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column;min-width:0;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;gap:16px;flex-shrink:0;position:sticky;top:0;z-index:10;}
+.topbar-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;}
+.topbar-actions{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.api-status{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;}
+.api-status.ok{background:var(--green-lt);color:var(--green);}
+.api-status.err{background:var(--red-lt);color:var(--red);}
+.api-status.checking{background:var(--amber-lt);color:var(--amber);}
+
+/* PAGES */
+.page{padding:28px;flex:1;display:none;}
+.page.active{display:block;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:'Figtree',sans-serif;text-decoration:none;}
+.btn-primary{background:var(--blue);color:#fff;}
+.btn-primary:hover{background:#1e40af;}
+.btn-primary:disabled{background:var(--border2);color:var(--ink4);cursor:not-allowed;}
+.btn-sm{padding:5px 11px;font-size:12px;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px;}
+.card-header{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;}
+.card-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;}
+.card-body{padding:16px 18px;}
+
+/* CHIPS */
+.chip{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;}
+.chip-teal{background:var(--teal-lt);color:var(--teal);}
+.chip-gray{background:var(--surface2);color:var(--ink3);border:1px solid var(--border);}
+
+/* TABLES */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--ink3);background:var(--surface2);border-bottom:1px solid var(--border);white-space:nowrap;}
+thead th.status-col{background:#f0f7ff;color:var(--blue);border-bottom:2px solid #93c5fd;}
+thead th.fp-col{background:#f0fdfb;color:var(--teal);border-bottom:2px solid #5eead4;}
+tbody td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px;color:var(--ink2);vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr.row-fp{background:#fafffe;}
+
+/* STATUS CELLS */
+.st-cell{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;}
+.st-ok{color:var(--green);}
+.st-warn{color:var(--amber);}
+.st-err{color:var(--red);}
+.st-null{color:var(--ink4);font-weight:400;}
+.st-processed{color:var(--green);font-weight:700;}
+
+/* FORM */
+.input{width:100%;padding:8px 12px;border-radius:7px;border:1px solid var(--border2);background:var(--surface);font-size:13px;font-family:'Figtree',sans-serif;color:var(--ink);outline:none;transition:border-color .15s,box-shadow .15s;}
+.input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(29,78,216,0.1);}
+.input-group{position:relative;}
+.input-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--ink4);pointer-events:none;}
+.input-group .input{padding-left:34px;}
+.mono{font-family:'JetBrains Mono',monospace;font-size:12px;}
+
+/* PAGE HEADERS */
+.page-head{margin-bottom:24px;}
+.page-head h1{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:4px;}
+.page-head p{color:var(--ink3);font-size:13px;}
+
+/* SEARCH BAR */
+.stabs{display:flex;gap:4px;margin-bottom:14px;}
+.stab{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);color:var(--ink3);transition:all .15s;background:var(--surface);}
+.stab.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+.search-bar{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:20px;}
+
+/* STATES */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.spinner-dark{border-color:rgba(0,0,0,0.1);border-top-color:var(--blue);}
+.state-box{text-align:center;padding:60px 20px;color:var(--ink4);}
+.state-box .icon{font-size:40px;margin-bottom:12px;}
+.state-box h3{font-size:14px;font-weight:600;color:var(--ink3);margin-bottom:5px;}
+.state-box p{font-size:12px;}
+.error-banner{background:var(--red-lt);border:1px solid #fca5a5;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--red);display:flex;align-items:flex-start;gap:10px;}
+
+/* RESULT META */
+.result-meta{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+.query-tag{font-size:11px;padding:3px 8px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);font-family:'JetBrains Mono',monospace;color:var(--ink3);}
+.query-tag.has-results{background:var(--blue-lt);border-color:#93c5fd;color:var(--blue);}
+
+/* HOME */
+.home-hero{background:linear-gradient(135deg,var(--navy) 0%,#1e3a5f 100%);border-radius:14px;padding:36px;margin-bottom:24px;position:relative;overflow:hidden;}
+.home-hero::before{content:'FP';position:absolute;right:32px;top:50%;transform:translateY(-50%);font-family:'Syne',sans-serif;font-size:140px;font-weight:800;color:rgba(255,255,255,0.04);line-height:1;pointer-events:none;}
+.home-hero h2{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:8px;}
+.home-hero p{color:rgba(255,255,255,0.55);font-size:13px;max-width:480px;line-height:1.6;}
+.home-quick{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:24px;}
+.hq-card{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:18px;cursor:pointer;transition:all .2s;}
+.hq-card:hover{background:rgba(255,255,255,0.12);}
+.hq-icon{font-size:22px;margin-bottom:10px;}
+.hq-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;}
+.hq-desc{font-size:12px;color:rgba(255,255,255,0.45);line-height:1.5;}
+
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-mark">Freight<span>Pay</span></div>
+    <div class="sb-logo-sub">Investigator</div>
+  </div>
+  <div class="sb-section">
+    <div class="sb-section-label">Investigate</div>
+    <div class="sb-item active" onclick="nav('home')" id="nav-home"><span class="sb-icon">⌂</span> Home</div>
+    <div class="sb-item" onclick="nav('search')" id="nav-search"><span class="sb-icon">⌕</span> Search</div>
+  </div>
+  <div class="sb-bottom">
+    <div class="sb-user">
+      <div class="sb-avatar">FP</div>
+      <div>
+        <div class="sb-user-name">KFNA.BULK_PLAN</div>
+        <div class="sb-user-role">OTM Service Account</div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">Home</div>
+    <div class="topbar-actions">
+      <div class="api-status checking" id="api-status">
+        <span class="spinner spinner-dark" style="width:10px;height:10px;border-top-color:var(--amber);"></span>
+        Checking OTM...
+      </div>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div class="page active" id="page-home">
+    <div class="home-hero">
+      <h2>FreightPay Investigator</h2>
+      <p>Search OTM live. See BTF, USB and FP payment statuses inline — all in one view.</p>
+      <div class="home-quick">
+        <div class="hq-card" onclick="nav('search');setSearchType('shipment')">
+          <div class="hq-icon">🔍</div>
+          <div class="hq-title">Search by Shipment</div>
+          <div class="hq-desc">Enter a shipment name or XID. Runs FP_SHP_NAME_DIRECT + INDIRECT in parallel.</div>
+        </div>
+        <div class="hq-card" onclick="nav('search');setSearchType('order')">
+          <div class="hq-icon">📦</div>
+          <div class="hq-title">Search by Order</div>
+          <div class="hq-desc">Enter an order / reference number. Runs FP_ORD_DIRECT + INDIRECT in parallel.</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span>ℹ</span><span class="card-title">Column Guide</span></div>
+      <div class="card-body" style="font-size:13px;color:var(--ink3);line-height:1.85;">
+        <p>Status and FP columns are shown <strong style="color:var(--ink);">only for FP shipments</strong>. TOC rows show —.</p>
+        <p style="margin-top:8px;"><strong style="color:var(--ink);">BTF Eligibility</strong> — BTF_SHIP_IND (Y / N)</p>
+        <p style="margin-top:4px;"><strong style="color:var(--ink);">BTF Pricing</strong> — BTF_RATE_IND (NOT_PROCESSED / PRICED / HOLD / ERROR)</p>
+        <p style="margin-top:4px;"><strong style="color:var(--ink);">USB Eligibility</strong> — SEND_SHIPMENT_USB (Y / N)</p>
+        <p style="margin-top:4px;"><strong style="color:var(--ink);">USB Status</strong> — SENT_TO_USB (NOT_PROCESSED / SENT / PROCESSED)</p>
+        <p style="margin-top:4px;"><strong style="color:var(--ink);">FP Status</strong> — Attribute10 value. If null → <strong style="color:var(--green);">Processed</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="page" id="page-search">
+    <div class="page-head">
+      <h1>Search</h1>
+      <p>Search OTM live. All statuses shown inline in the results table.</p>
+    </div>
+    <div class="search-bar">
+      <div class="stabs">
+        <div class="stab active" onclick="setSearchType('shipment')" id="tab-shipment">Shipment Name / XID</div>
+        <div class="stab" onclick="setSearchType('order')" id="tab-order">Order / Reference #</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-end;">
+        <div style="flex:1;">
+          <div class="input-group">
+            <span class="input-icon">⌕</span>
+            <input class="input" id="search-input" placeholder="e.g. 2100416780"
+              onkeydown="if(event.key==='Enter')doSearch()">
+          </div>
+        </div>
+        <button class="btn btn-primary" id="search-btn" onclick="doSearch()">Search OTM</button>
+      </div>
+      <div id="search-hint" style="margin-top:10px;font-size:11px;color:var(--ink4);">
+        Runs <span class="mono">FP_SHP_NAME_DIRECT</span> + <span class="mono">FP_SHP_NAME_INDIRECT</span> in parallel
+      </div>
+    </div>
+
+    <div id="search-error" class="error-banner" style="display:none;"><span>⚠</span><div id="search-error-text"></div></div>
+    <div class="state-box" id="search-empty">
+      <div class="icon">⌕</div>
+      <h3>Enter a value to search</h3>
+      <p>Type a shipment name or order number above and press Search</p>
+    </div>
+    <div class="state-box" id="search-loading" style="display:none;">
+      <div class="spinner spinner-dark" style="width:28px;height:28px;margin:0 auto 12px;"></div>
+      <h3>Querying OTM...</h3><p>Running two saved queries in parallel</p>
+    </div>
+    <div id="search-results" style="display:none;">
+      <div class="result-meta" id="result-meta"></div>
+      <div class="card" style="margin-bottom:0;">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Shipment ID</th>
+                <th>Shipment Name</th>
+                <th>Mode</th>
+                <th>Carrier</th>
+                <th>Origin</th>
+                <th>Destination</th>
+                <th>Start</th>
+                <th>Weight</th>
+                <th>Cost (USD)</th>
+                <th>Type</th>
+                <th class="status-col">BTF Eligibility</th>
+                <th class="status-col">BTF Pricing</th>
+                <th class="status-col">USB Eligibility</th>
+                <th class="status-col">USB Status</th>
+                <th class="fp-col">FP Status</th>
+              </tr>
+            </thead>
+            <tbody id="results-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+const API = '';
+let currentSearchType = 'shipment';
+
+// ── NAV ──
+function nav(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  const ni = document.getElementById('nav-' + page);
+  if (ni) ni.classList.add('active');
+  const titles = {home:'Home', search:'Search'};
+  document.getElementById('topbar-title').textContent = titles[page] || page;
+}
+
+// ── SEARCH TYPE ──
+function setSearchType(type) {
+  currentSearchType = type;
+  document.querySelectorAll('.stab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + type).classList.add('active');
+  document.getElementById('search-hint').innerHTML = type === 'shipment'
+    ? 'Runs <span class="mono">FP_SHP_NAME_DIRECT</span> + <span class="mono">FP_SHP_NAME_INDIRECT</span> in parallel'
+    : 'Runs <span class="mono">FP_ORD_DIRECT</span> + <span class="mono">FP_ORD_INDIRECT</span> in parallel';
+  document.getElementById('search-input').placeholder = type === 'shipment'
+    ? 'e.g. 2100416780 or 2100416780A' : 'e.g. 2093559040';
+  document.getElementById('search-empty').style.display = 'block';
+  document.getElementById('search-results').style.display = 'none';
+  document.getElementById('search-error').style.display = 'none';
+}
+
+// ── SEARCH ──
+async function doSearch() {
+  const q = document.getElementById('search-input').value.trim();
+  if (!q) { alert('Please enter a search value.'); return; }
+  document.getElementById('search-empty').style.display = 'none';
+  document.getElementById('search-results').style.display = 'none';
+  document.getElementById('search-error').style.display = 'none';
+  document.getElementById('search-loading').style.display = 'block';
+  const btn = document.getElementById('search-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Searching...';
+  try {
+    const resp = await fetch(`${API}/api/search?q=${encodeURIComponent(q)}&type=${currentSearchType}`);
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.detail || `HTTP ${resp.status}`);
+    renderResults(data);
+  } catch (err) {
+    document.getElementById('search-error-text').textContent = `Error: ${err.message}`;
+    document.getElementById('search-error').style.display = 'flex';
+  } finally {
+    document.getElementById('search-loading').style.display = 'none';
+    btn.disabled = false; btn.innerHTML = 'Search OTM';
+  }
+}
+
+// ── STATUS CELL ──
+function stCell(value) {
+  if (!value) return `<td><span class="st-cell st-null">—</span></td>`;
+  const v = value.toUpperCase();
+  let cls = 'st-null';
+  if (['Y','PRICED','PROCESSED','SENT'].includes(v)) cls = 'st-ok';
+  else if (['N','NOT_PROCESSED'].includes(v)) cls = 'st-warn';
+  else if (['ERROR','HOLD'].includes(v)) cls = 'st-err';
+  return `<td><span class="st-cell ${cls}">${value}</span></td>`;
+}
+
+// ── FP STATUS CELL (Attribute10) ──
+function fpStatusCell(isFP, attr10) {
+  if (!isFP) return `<td><span class="st-cell st-null">—</span></td>`;
+  const isEmpty = attr10 === null || attr10 === undefined || attr10 === '';
+  if (isEmpty) {
+    return `<td><span class="st-cell st-processed">Processed</span></td>`;
+  }
+  return `<td><span class="st-cell st-err">${attr10}</span></td>`;
+}
+
+function renderResults(data) {
+  document.getElementById('search-results').style.display = 'block';
+  const meta = document.getElementById('result-meta');
+  let mh = `<span style="font-size:13px;font-weight:600;color:var(--ink3);">${data.totalCount} shipment${data.totalCount!==1?'s':''} found</span>`;
+  mh += ` <span style="font-size:12px;color:var(--ink4);">· Live from OTM</span>`;
+  (data.queries||[]).forEach(q => {
+    const cls = q.count > 0 ? 'query-tag has-results' : 'query-tag';
+    const lbl = (q.name||'').split('.').pop();
+    mh += ` <span class="${cls}">${lbl}: ${q.count}</span>`;
+    if (q.error) mh += ` <span style="color:var(--red);font-size:11px;">⚠ ${q.error}</span>`;
+  });
+  meta.innerHTML = mh;
+
+  const tbody = document.getElementById('results-body');
+  if (!data.items || data.items.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="15" style="text-align:center;padding:32px;color:var(--ink4);">No shipments found.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.items.map(s => {
+    const isFP = s.shipmentAsWork;
+    const startDate = s.startTime ? s.startTime.split('T')[0] : '—';
+    const weight = s.totalWeight != null ? `${s.totalWeight.toLocaleString()} ${s.weightUnit||''}` : '—';
+    const cost = s.totalActualCost != null
+      ? `$${s.totalActualCost.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}` : '—';
+    const typeChip = isFP
+      ? `<span class="chip chip-teal">FP</span>`
+      : `<span class="chip chip-gray">TOC</span>`;
+    const rowCls = isFP ? 'row-fp' : '';
+    const st = s.statuses || {};
+
+    const btfElig  = isFP ? stCell(st.BTF_SHIP_IND?.value)     : `<td><span class="st-cell st-null">—</span></td>`;
+    const btfPrice = isFP ? stCell(st.BTF_RATE_IND?.value)     : `<td><span class="st-cell st-null">—</span></td>`;
+    const usbElig  = isFP ? stCell(st.SEND_SHIPMENT_USB?.value) : `<td><span class="st-cell st-null">—</span></td>`;
+    const usbSt    = isFP ? stCell(st.SENT_TO_USB?.value)      : `<td><span class="st-cell st-null">—</span></td>`;
+    const fpSt     = fpStatusCell(isFP, s.attribute10);
+
+    return `
+      <tr class="${rowCls}">
+        <td class="mono" style="color:var(--blue);font-weight:600;">${s.shipmentXid||'—'}</td>
+        <td class="mono">${s.shipmentName||'—'}</td>
+        <td><span class="chip chip-gray">${s.transportMode||'—'}</span></td>
+        <td style="font-weight:500;">${s.carrier||'—'}</td>
+        <td class="mono" style="font-size:11px;">${s.sourceLocation||'—'}</td>
+        <td class="mono" style="font-size:11px;">${s.destLocation||'—'}</td>
+        <td style="font-size:12px;color:var(--ink3);">${startDate}</td>
+        <td style="font-size:12px;">${weight}</td>
+        <td style="font-weight:600;">${cost}</td>
+        <td>${typeChip}</td>
+        ${btfElig}${btfPrice}${usbElig}${usbSt}${fpSt}
+      </tr>`;
+  }).join('');
+}
+
+// ── HEALTH CHECK ──
+async function checkHealth() {
+  const el = document.getElementById('api-status');
+  try {
+    const resp = await fetch('/api/health', {signal: AbortSignal.timeout(8000)});
+    const data = await resp.json();
+    el.className = data.status === 'ok' ? 'api-status ok' : 'api-status err';
+    el.innerHTML = data.status === 'ok' ? '● OTM Connected' : '● OTM Error';
+  } catch {
+    el.className = 'api-status err';
+    el.innerHTML = '● OTM Unreachable';
+  }
+}
+checkHealth();
+setInterval(checkHealth, 60000);
+</script>
+</body>
+</html>
