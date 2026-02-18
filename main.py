@@ -50,13 +50,14 @@ DETAIL_FIELDS = (
     "statuses,refnums"
 )
 
-# All 5 queries run for every search regardless of type
+# All queries run for every search
 ALL_QUERIES = [
     f"{OTM_SUBDOMAIN}.FP_SHP_NAME_DIRECT",
     f"{OTM_SUBDOMAIN}.FP_SHP_NAME_INDIRECT",
     f"{OTM_SUBDOMAIN}.FP_ORD_DIRECT",
     f"{OTM_SUBDOMAIN}.FP_ORD_INDIRECT",
     f"{OTM_SUBDOMAIN}.FP_ORD_PL_SHP_DIRECT",
+    f"{OTM_SUBDOMAIN}.FP_SHP_NAME_SAP",
 ]
 
 # The 4 FP status types we care about
@@ -131,7 +132,6 @@ def parse_refnums(raw_refnums: dict) -> Optional[str]:
     """Extract DATA_SOURCE value from refnums."""
     for item in (raw_refnums or {}).get("items", []):
         qualifier = item.get("shipmentRefnumQualGid", "")
-        # Strip domain prefix if present (e.g. "KRAFT/KFNA.DATA_SOURCE" -> "DATA_SOURCE")
         if "." in qualifier:
             qualifier = qualifier.split(".", 1)[1]
         if qualifier.upper() == DATA_SOURCE_QUALIFIER:
@@ -150,7 +150,7 @@ def parse_shipment(raw: dict) -> dict:
     ins    = raw.get("insertDate",      {}) or {}
     upd    = raw.get("updateDate",      {}) or {}
 
-    statuses   = parse_inline_statuses(raw.get("statuses", {}))
+    statuses    = parse_inline_statuses(raw.get("statuses", {}))
     data_source = parse_refnums(raw.get("refnums", {}))
 
     # FP = has SEND_SHIPMENT_USB status or shipmentAsWork flag
