@@ -184,15 +184,15 @@ tbody tr.row-fp{background:#fafffe;}
       <h2>FreightPay Investigator</h2>
       <p>Search OTM live. See BTF, USB and FP payment statuses inline — all in one view.</p>
       <div class="home-quick">
-        <div class="hq-card" onclick="nav('search');setSearchType('shipment')">
+        <div class="hq-card" onclick="nav('search')">
           <div class="hq-icon">🔍</div>
-          <div class="hq-title">Search by Shipment</div>
-          <div class="hq-desc">Enter a shipment name or XID. Runs FP_SHP_NAME_DIRECT + INDIRECT in parallel.</div>
+          <div class="hq-title">Search Shipments</div>
+          <div class="hq-desc">Enter a shipment name, XID, or order number. All 4 OTM queries run in parallel automatically.</div>
         </div>
-        <div class="hq-card" onclick="nav('search');setSearchType('order')">
+        <div class="hq-card" onclick="nav('search')">
           <div class="hq-icon">📦</div>
-          <div class="hq-title">Search by Order</div>
-          <div class="hq-desc">Enter an order / reference number. Runs FP_ORD_DIRECT + INDIRECT in parallel.</div>
+          <div class="hq-title">All Queries, One Search</div>
+          <div class="hq-desc">FP_SHP_NAME_DIRECT + INDIRECT + FP_ORD_DIRECT + INDIRECT — results are deduplicated by shipment XID.</div>
         </div>
       </div>
     </div>
@@ -205,6 +205,7 @@ tbody tr.row-fp{background:#fafffe;}
         <p style="margin-top:4px;"><strong style="color:var(--ink);">USB Eligibility</strong> — SEND_SHIPMENT_USB (Y / N)</p>
         <p style="margin-top:4px;"><strong style="color:var(--ink);">USB Status</strong> — SENT_TO_USB (NOT_PROCESSED / SENT / PROCESSED)</p>
         <p style="margin-top:4px;"><strong style="color:var(--ink);">FP Status</strong> — Attribute10 value. If null → <strong style="color:var(--green);">Processed</strong></p>
+        <p style="margin-top:4px;"><strong style="color:var(--ink);">Data Source</strong> — Refnum qualifier DATA_SOURCE value</p>
       </div>
     </div>
   </div>
@@ -216,22 +217,18 @@ tbody tr.row-fp{background:#fafffe;}
       <p>Search OTM live. All statuses shown inline in the results table.</p>
     </div>
     <div class="search-bar">
-      <div class="stabs">
-        <div class="stab active" onclick="setSearchType('shipment')" id="tab-shipment">Shipment Name / XID</div>
-        <div class="stab" onclick="setSearchType('order')" id="tab-order">Order / Reference #</div>
-      </div>
       <div style="display:flex;gap:10px;align-items:flex-end;">
         <div style="flex:1;">
           <div class="input-group">
             <span class="input-icon">⌕</span>
-            <input class="input" id="search-input" placeholder="e.g. 2100416780"
+            <input class="input" id="search-input" placeholder="e.g. shipment name, XID or order number"
               onkeydown="if(event.key==='Enter')doSearch()">
           </div>
         </div>
         <button class="btn btn-primary" id="search-btn" onclick="doSearch()">Search OTM</button>
       </div>
-      <div id="search-hint" style="margin-top:10px;font-size:11px;color:var(--ink4);">
-        Runs <span class="mono">FP_SHP_NAME_DIRECT</span> + <span class="mono">FP_SHP_NAME_INDIRECT</span> in parallel
+      <div style="margin-top:10px;font-size:11px;color:var(--ink4);">
+        Runs <span class="mono">FP_SHP_NAME_DIRECT</span> + <span class="mono">FP_SHP_NAME_INDIRECT</span> + <span class="mono">FP_ORD_DIRECT</span> + <span class="mono">FP_ORD_INDIRECT</span> in parallel
       </div>
     </div>
 
@@ -267,6 +264,7 @@ tbody tr.row-fp{background:#fafffe;}
                 <th class="status-col">USB Eligibility</th>
                 <th class="status-col">USB Status</th>
                 <th class="fp-col">FP Status</th>
+                <th class="fp-col">Data Source</th>
               </tr>
             </thead>
             <tbody id="results-body"></tbody>
@@ -281,7 +279,6 @@ tbody tr.row-fp{background:#fafffe;}
 
 <script>
 const API = '';
-let currentSearchType = 'shipment';
 
 // ── NAV ──
 function nav(page) {
@@ -292,21 +289,6 @@ function nav(page) {
   if (ni) ni.classList.add('active');
   const titles = {home:'Home', search:'Search'};
   document.getElementById('topbar-title').textContent = titles[page] || page;
-}
-
-// ── SEARCH TYPE ──
-function setSearchType(type) {
-  currentSearchType = type;
-  document.querySelectorAll('.stab').forEach(t => t.classList.remove('active'));
-  document.getElementById('tab-' + type).classList.add('active');
-  document.getElementById('search-hint').innerHTML = type === 'shipment'
-    ? 'Runs <span class="mono">FP_SHP_NAME_DIRECT</span> + <span class="mono">FP_SHP_NAME_INDIRECT</span> in parallel'
-    : 'Runs <span class="mono">FP_ORD_DIRECT</span> + <span class="mono">FP_ORD_INDIRECT</span> in parallel';
-  document.getElementById('search-input').placeholder = type === 'shipment'
-    ? 'e.g. 2100416780 or 2100416780A' : 'e.g. 2093559040';
-  document.getElementById('search-empty').style.display = 'block';
-  document.getElementById('search-results').style.display = 'none';
-  document.getElementById('search-error').style.display = 'none';
 }
 
 // ── SEARCH ──
@@ -320,7 +302,7 @@ async function doSearch() {
   const btn = document.getElementById('search-btn');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Searching...';
   try {
-    const resp = await fetch(`${API}/api/search?q=${encodeURIComponent(q)}&type=${currentSearchType}`);
+    const resp = await fetch(`${API}/api/search?q=${encodeURIComponent(q)}`);
     const data = await resp.json();
     if (!resp.ok) throw new Error(data.detail || `HTTP ${resp.status}`);
     renderResults(data);
@@ -358,7 +340,7 @@ function renderResults(data) {
   document.getElementById('search-results').style.display = 'block';
   const meta = document.getElementById('result-meta');
   let mh = `<span style="font-size:13px;font-weight:600;color:var(--ink3);">${data.totalCount} shipment${data.totalCount!==1?'s':''} found</span>`;
-  mh += ` <span style="font-size:12px;color:var(--ink4);">· Live from OTM</span>`;
+  mh += ` <span style="font-size:12px;color:var(--ink4);">· Live from OTM · All 4 queries</span>`;
   (data.queries||[]).forEach(q => {
     const cls = q.count > 0 ? 'query-tag has-results' : 'query-tag';
     const lbl = (q.name||'').split('.').pop();
@@ -369,7 +351,7 @@ function renderResults(data) {
 
   const tbody = document.getElementById('results-body');
   if (!data.items || data.items.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="15" style="text-align:center;padding:32px;color:var(--ink4);">No shipments found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="16" style="text-align:center;padding:32px;color:var(--ink4);">No shipments found.</td></tr>`;
     return;
   }
 
@@ -390,6 +372,9 @@ function renderResults(data) {
     const usbElig  = isFP ? stCell(st.SEND_SHIPMENT_USB?.value) : `<td><span class="st-cell st-null">—</span></td>`;
     const usbSt    = isFP ? stCell(st.SENT_TO_USB?.value)      : `<td><span class="st-cell st-null">—</span></td>`;
     const fpSt     = fpStatusCell(isFP, s.attribute10);
+    const dataSourceCell = s.dataSource
+      ? `<td><span class="chip chip-teal">${s.dataSource}</span></td>`
+      : `<td><span class="st-cell st-null">—</span></td>`;
 
     return `
       <tr class="${rowCls}">
@@ -403,7 +388,7 @@ function renderResults(data) {
         <td style="font-size:12px;">${weight}</td>
         <td style="font-weight:600;">${cost}</td>
         <td>${typeChip}</td>
-        ${btfElig}${btfPrice}${usbElig}${usbSt}${fpSt}
+        ${btfElig}${btfPrice}${usbElig}${usbSt}${fpSt}${dataSourceCell}
       </tr>`;
   }).join('');
 }

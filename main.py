@@ -34,7 +34,7 @@ SEARCH_FIELDS = (
     "startTime,endTime,"
     "totalWeight,totalVolume,totalActualCost,"
     "attribute10,"
-    "statuses"
+    "statuses,refnums"
 )
 
 DETAIL_FIELDS = (
@@ -47,19 +47,16 @@ DETAIL_FIELDS = (
     "shipmentAsWork,"
     "attribute1,attribute2,attribute5,attribute10,"
     "insertDate,updateDate,"
-    "statuses"
+    "statuses,refnums"
 )
 
-QUERIES = {
-    "order": [
-        f"{OTM_SUBDOMAIN}.FP_ORD_DIRECT",
-        f"{OTM_SUBDOMAIN}.FP_ORD_INDIRECT",
-    ],
-    "shipment": [
-        f"{OTM_SUBDOMAIN}.FP_SHP_NAME_DIRECT",
-        f"{OTM_SUBDOMAIN}.FP_SHP_NAME_INDIRECT",
-    ],
-}
+# All 4 queries run for every search regardless of type
+ALL_QUERIES = [
+    f"{OTM_SUBDOMAIN}.FP_SHP_NAME_DIRECT",
+    f"{OTM_SUBDOMAIN}.FP_SHP_NAME_INDIRECT",
+    f"{OTM_SUBDOMAIN}.FP_ORD_DIRECT",
+    f"{OTM_SUBDOMAIN}.FP_ORD_INDIRECT",
+]
 
 # The 4 FP status types we care about
 FP_STATUS_TYPES = {
@@ -69,6 +66,9 @@ FP_STATUS_TYPES = {
     "SENT_TO_USB",
 }
 
+# Refnum qualifier for Data Source
+DATA_SOURCE_QUALIFIER = "DATA_SOURCE"
+
 # ── HELPERS ─────────────────────────────────────────────
 
 def build_search_url(query_name: str, param_value: str) -> str:
@@ -76,14 +76,14 @@ def build_search_url(query_name: str, param_value: str) -> str:
         f"{OTM_BASE}/logisticsRestApi/resources-int/v2"
         f"/custom-actions/savedQueries/shipments"
         f"/{OTM_DOMAIN}/{query_name}"
-        f"?fields={SEARCH_FIELDS}&expand=statuses&parameterValue={param_value}"
+        f"?fields={SEARCH_FIELDS}&expand=statuses,refnums&parameterValue={param_value}"
     )
 
 def build_detail_url(shipment_xid: str) -> str:
     return (
         f"{OTM_BASE}/logisticsRestApi/resources-int/v2"
         f"/shipments/{OTM_DOMAIN}/{OTM_SUBDOMAIN}.{shipment_xid}"
-        f"?fields={DETAIL_FIELDS}&expand=statuses"
+        f"?fields={DETAIL_FIELDS}&expand=statuses,refnums"
     )
 
 def extract_xid_from_link(links: list, rel: str = "canonical") -> Optional[str]:
@@ -126,6 +126,17 @@ def parse_inline_statuses(raw_statuses: dict) -> dict:
             }
     return result
 
+def parse_refnums(raw_refnums: dict) -> Optional[str]:
+    """Extract DATA_SOURCE value from refnums."""
+    for item in (raw_refnums or {}).get("items", []):
+        qualifier = item.get("refnumQualifierGid", "")
+        # Strip domain prefix if present (e.g. "KRAFT.DATA_SOURCE" -> "DATA_SOURCE")
+        if "." in qualifier:
+            qualifier = qualifier.split(".", 1)[1]
+        if qualifier.upper() == DATA_SOURCE_QUALIFIER:
+            return item.get("refnumValue")
+    return None
+
 def parse_shipment(raw: dict) -> dict:
     src_links = raw.get("sourceLocation", {}).get("links", [])
     dst_links = raw.get("destLocation",   {}).get("links", [])
@@ -138,7 +149,8 @@ def parse_shipment(raw: dict) -> dict:
     ins    = raw.get("insertDate",      {}) or {}
     upd    = raw.get("updateDate",      {}) or {}
 
-    statuses = parse_inline_statuses(raw.get("statuses", {}))
+    statuses   = parse_inline_statuses(raw.get("statuses", {}))
+    data_source = parse_refnums(raw.get("refnums", {}))
 
     # FP = has SEND_SHIPMENT_USB status or shipmentAsWork flag
     is_fp = raw.get("shipmentAsWork", False) or "SEND_SHIPMENT_USB" in statuses
@@ -163,6 +175,7 @@ def parse_shipment(raw: dict) -> dict:
         "shipmentAsWork":  is_fp,
         "perspective":     raw.get("perspective"),
         "attribute10":     raw.get("attribute10"),
+        "dataSource":      data_source,
         "statuses":        statuses,
     }
 
@@ -194,18 +207,13 @@ async def fetch_query(client: httpx.AsyncClient, url: str, query_name: str) -> d
 
 @app.get("/api/search")
 async def search(
-    q:    str = Query(..., description="Search value"),
-    type: str = Query("shipment", description="'order' or 'shipment'")
+    q: str = Query(..., description="Search value"),
 ):
-    if type not in QUERIES:
-        raise HTTPException(400, f"type must be 'order' or 'shipment', got '{type}'")
-
-    query_names = QUERIES[type]
-    urls = [build_search_url(qn, q) for qn in query_names]
+    urls = [build_search_url(qn, q) for qn in ALL_QUERIES]
 
     async with httpx.AsyncClient(verify=False) as client:
         results = await asyncio.gather(
-            *[fetch_query(client, url, qn) for url, qn in zip(urls, query_names)]
+            *[fetch_query(client, url, qn) for url, qn in zip(urls, ALL_QUERIES)]
         )
 
     seen = set()
@@ -218,7 +226,6 @@ async def search(
                 merged.append(item)
 
     return {
-        "searchType":  type,
         "searchValue": q,
         "totalCount":  len(merged),
         "queries":     [{"name": r["query"], "count": r["count"], "error": r["error"]} for r in results],
