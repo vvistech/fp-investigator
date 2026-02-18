@@ -129,12 +129,12 @@ def parse_inline_statuses(raw_statuses: dict) -> dict:
 def parse_refnums(raw_refnums: dict) -> Optional[str]:
     """Extract DATA_SOURCE value from refnums."""
     for item in (raw_refnums or {}).get("items", []):
-        qualifier = item.get("refnumQualifierGid", "")
-        # Strip domain prefix if present (e.g. "KRAFT.DATA_SOURCE" -> "DATA_SOURCE")
+        qualifier = item.get("shipmentRefnumQualGid", "")
+        # Strip domain prefix if present (e.g. "KRAFT/KFNA.DATA_SOURCE" -> "DATA_SOURCE")
         if "." in qualifier:
             qualifier = qualifier.split(".", 1)[1]
         if qualifier.upper() == DATA_SOURCE_QUALIFIER:
-            return item.get("refnumValue")
+            return item.get("shipmentRefnumValue")
     return None
 
 def parse_shipment(raw: dict) -> dict:

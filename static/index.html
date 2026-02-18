@@ -251,6 +251,7 @@ tbody tr.row-fp{background:#fafffe;}
               <tr>
                 <th>Shipment ID</th>
                 <th>Shipment Name</th>
+                <th>Data Source</th>
                 <th>Mode</th>
                 <th>Carrier</th>
                 <th>Origin</th>
@@ -372,14 +373,12 @@ function renderResults(data) {
     const usbElig  = isFP ? stCell(st.SEND_SHIPMENT_USB?.value) : `<td><span class="st-cell st-null">—</span></td>`;
     const usbSt    = isFP ? stCell(st.SENT_TO_USB?.value)      : `<td><span class="st-cell st-null">—</span></td>`;
     const fpSt     = fpStatusCell(isFP, s.attribute10);
-    const dataSourceCell = s.dataSource
-      ? `<td><span class="chip chip-teal">${s.dataSource}</span></td>`
-      : `<td><span class="st-cell st-null">—</span></td>`;
 
     return `
       <tr class="${rowCls}">
         <td class="mono" style="color:var(--blue);font-weight:600;">${s.shipmentXid||'—'}</td>
         <td class="mono">${s.shipmentName||'—'}</td>
+        <td>${s.dataSource ? `<span class="chip chip-teal">${s.dataSource}</span>` : `<span class="st-cell st-null">—</span>`}</td>
         <td><span class="chip chip-gray">${s.transportMode||'—'}</span></td>
         <td style="font-weight:500;">${s.carrier||'—'}</td>
         <td class="mono" style="font-size:11px;">${s.sourceLocation||'—'}</td>
@@ -388,7 +387,7 @@ function renderResults(data) {
         <td style="font-size:12px;">${weight}</td>
         <td style="font-weight:600;">${cost}</td>
         <td>${typeChip}</td>
-        ${btfElig}${btfPrice}${usbElig}${usbSt}${fpSt}${dataSourceCell}
+        ${btfElig}${btfPrice}${usbElig}${usbSt}${fpSt}
       </tr>`;
   }).join('');
 }
