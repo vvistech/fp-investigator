@@ -17,6 +17,7 @@
   --red:#dc2626; --red-lt:#fee2e2;
   --green:#16a34a; --green-lt:#dcfce7;
   --purple:#7c3aed; --purple-lt:#ede9fe;
+  --orange:#ea580c; --orange-lt:#ffedd5;
   --sidebar-w:210px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -57,17 +58,22 @@ html,body{height:100%;font-family:'Figtree',sans-serif;background:var(--bg);colo
 @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
 
 /* BUTTONS */
-.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:'Figtree',sans-serif;text-decoration:none;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:'Figtree',sans-serif;}
 .btn-primary{background:var(--blue);color:#fff;}
 .btn-primary:hover{background:#1e40af;}
 .btn-primary:disabled{background:var(--border2);color:var(--ink4);cursor:not-allowed;}
 
 /* BTF TRIGGER BUTTON */
 .btn-btf{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:'Figtree',sans-serif;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;transition:all .15s;box-shadow:0 1px 4px rgba(124,58,237,0.3);white-space:nowrap;}
-.btn-btf:hover{background:linear-gradient(135deg,#6d28d9,#5b21b6);box-shadow:0 2px 8px rgba(124,58,237,0.4);transform:translateY(-1px);}
-.btn-btf:disabled{background:var(--surface2);color:var(--ink4);border:1px solid var(--border);box-shadow:none;transform:none;cursor:not-allowed;}
-.btn-btf-sent{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;background:var(--green-lt);color:var(--green);border:1px solid #86efac;white-space:nowrap;}
-.btn-btf-sending{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;background:var(--purple-lt);color:var(--purple);border:1px solid #c4b5fd;white-space:nowrap;}
+.btn-btf:hover{background:linear-gradient(135deg,#6d28d9,#5b21b6);transform:translateY(-1px);}
+
+/* SEND TO PO BUTTON */
+.btn-po{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:'Figtree',sans-serif;background:linear-gradient(135deg,#ea580c,#c2410c);color:#fff;transition:all .15s;box-shadow:0 1px 4px rgba(234,88,12,0.3);white-space:nowrap;}
+.btn-po:hover{background:linear-gradient(135deg,#c2410c,#9a3412);transform:translateY(-1px);}
+
+/* SENT STATES */
+.btn-sent-ok{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;background:var(--green-lt);color:var(--green);border:1px solid #86efac;white-space:nowrap;}
+.btn-sending{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;background:var(--surface2);color:var(--ink3);border:1px solid var(--border);white-space:nowrap;}
 
 /* CARDS */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px;}
@@ -105,7 +111,7 @@ tbody tr.row-fp{background:#fafffe;}
 .input{width:100%;padding:7px 11px;border-radius:7px;border:1px solid var(--border2);background:var(--surface);font-size:12px;font-family:'Figtree',sans-serif;color:var(--ink);outline:none;transition:border-color .15s,box-shadow .15s;}
 .input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(29,78,216,0.1);}
 .input-group{position:relative;}
-.input-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--ink4);pointer-events:none;font-size:13px;}
+.input-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--ink4);pointer-events:none;}
 .input-group .input{padding-left:30px;}
 .mono{font-family:'JetBrains Mono',monospace;font-size:11px;}
 
@@ -121,7 +127,6 @@ tbody tr.row-fp{background:#fafffe;}
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .spinner-dark{border-color:rgba(0,0,0,0.1);border-top-color:var(--blue);}
-.spinner-purple{border-color:rgba(124,58,237,0.2);border-top-color:var(--purple);}
 .state-box{text-align:center;padding:50px 20px;color:var(--ink4);}
 .state-box .icon{font-size:36px;margin-bottom:10px;}
 .state-box h3{font-size:13px;font-weight:600;color:var(--ink3);margin-bottom:4px;}
@@ -138,7 +143,7 @@ tbody tr.row-fp{background:#fafffe;}
 .home-hero::before{content:'FP';position:absolute;right:28px;top:50%;transform:translateY(-50%);font-family:'Syne',sans-serif;font-size:120px;font-weight:800;color:rgba(255,255,255,0.04);line-height:1;pointer-events:none;}
 .home-hero h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:6px;}
 .home-hero p{color:rgba(255,255,255,0.55);font-size:12px;max-width:480px;line-height:1.6;}
-.home-quick{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px;}
+.home-quick{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:20px;}
 .hq-card{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;cursor:pointer;transition:all .2s;}
 .hq-card:hover{background:rgba(255,255,255,0.12);}
 .hq-icon{font-size:20px;margin-bottom:8px;}
@@ -151,7 +156,9 @@ tbody tr.row-fp{background:#fafffe;}
 .modal{background:#fff;border-radius:14px;width:440px;box-shadow:0 20px 60px rgba(0,0,0,0.2);transform:translateY(10px) scale(0.98);transition:transform .2s;overflow:hidden;}
 .overlay.open .modal{transform:translateY(0) scale(1);}
 .modal-header{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px;}
-.modal-icon{width:38px;height:38px;border-radius:10px;background:var(--purple-lt);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.modal-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.modal-icon-btf{background:var(--purple-lt);}
+.modal-icon-po{background:var(--orange-lt);}
 .modal-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin-bottom:2px;}
 .modal-sub{font-size:11px;color:var(--ink3);}
 .modal-body{padding:18px 22px;}
@@ -160,13 +167,16 @@ tbody tr.row-fp{background:#fafffe;}
 .modal-row:last-child{margin-bottom:0;}
 .modal-lbl{font-size:11px;color:var(--ink3);font-weight:500;}
 .modal-val{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--ink);}
-.modal-warning{background:var(--amber-lt);border:1px solid #fcd34d;border-radius:7px;padding:10px 12px;font-size:11px;color:#92400e;display:flex;gap:8px;align-items:flex-start;}
+.modal-warning{border-radius:7px;padding:10px 12px;font-size:11px;display:flex;gap:8px;align-items:flex-start;}
+.modal-warning-btf{background:var(--amber-lt);border:1px solid #fcd34d;color:#92400e;}
+.modal-warning-po{background:var(--orange-lt);border:1px solid #fdba74;color:#9a3412;}
 .modal-footer{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
 .btn-cancel{background:var(--surface2);color:var(--ink2);border:1px solid var(--border2);padding:7px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Figtree',sans-serif;}
 .btn-cancel:hover{background:var(--border);}
-.btn-confirm{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;padding:7px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:'Figtree',sans-serif;display:flex;align-items:center;gap:6px;}
-.btn-confirm:hover{background:linear-gradient(135deg,#6d28d9,#5b21b6);}
-.btn-confirm:disabled{background:var(--border2);cursor:not-allowed;}
+.btn-confirm-btf{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;padding:7px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:'Figtree',sans-serif;display:flex;align-items:center;gap:6px;}
+.btn-confirm-btf:hover{background:linear-gradient(135deg,#6d28d9,#5b21b6);}
+.btn-confirm-po{background:linear-gradient(135deg,#ea580c,#c2410c);color:#fff;padding:7px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:'Figtree',sans-serif;display:flex;align-items:center;gap:6px;}
+.btn-confirm-po:hover{background:linear-gradient(135deg,#c2410c,#9a3412);}
 
 /* TOAST */
 .toast{position:fixed;bottom:24px;right:24px;padding:12px 18px;border-radius:10px;font-size:12px;font-weight:600;z-index:200;box-shadow:0 4px 20px rgba(0,0,0,0.15);transform:translateY(10px);opacity:0;transition:all .3s;pointer-events:none;}
@@ -219,30 +229,31 @@ tbody tr.row-fp{background:#fafffe;}
   <div class="page active" id="page-home">
     <div class="home-hero">
       <h2>FreightPay Investigator</h2>
-      <p>Search OTM live. View BTF, USB and FP statuses inline. Trigger BTF pricing directly from the results.</p>
+      <p>Search OTM live. View BTF, USB and FP statuses inline. Trigger BTF pricing or Send to PO directly from the results.</p>
       <div class="home-quick">
         <div class="hq-card" onclick="nav('search')">
           <div class="hq-icon">🔍</div>
           <div class="hq-title">Search Shipments</div>
-          <div class="hq-desc">Search by shipment name, XID, order number or SAP reference. All 6 queries run in parallel.</div>
+          <div class="hq-desc">Search by shipment name, XID, order or SAP reference. All 6 queries run in parallel.</div>
         </div>
         <div class="hq-card" onclick="nav('search')">
           <div class="hq-icon">⚡</div>
           <div class="hq-title">Trigger BTF</div>
-          <div class="hq-desc">For eligible TL + FP shipments with BTF_SHIP_IND = Y and NOT_PROCESSED, trigger pricing directly.</div>
+          <div class="hq-desc">FP + TL + BTF Elig = Y + NOT_PROCESSED. Posts REPROCESS to OTM WMServlet.</div>
+        </div>
+        <div class="hq-card" onclick="nav('search')">
+          <div class="hq-icon">📤</div>
+          <div class="hq-title">Send to PO</div>
+          <div class="hq-desc">TOC shipments where attributeNumber1 is null or 2. Creates FP shipment via OTM workflow.</div>
         </div>
       </div>
     </div>
     <div class="card">
-      <div class="card-header"><span>ℹ</span><span class="card-title">Column Guide</span></div>
-      <div class="card-body" style="font-size:12px;color:var(--ink3);line-height:1.85;">
-        <p>Status and FP columns shown only for FP shipments. TOC rows show —.</p>
-        <p style="margin-top:6px;"><strong style="color:var(--ink);">BTF Eligibility</strong> — BTF_SHIP_IND (Y / N)</p>
-        <p style="margin-top:4px;"><strong style="color:var(--ink);">BTF Pricing</strong> — BTF_RATE_IND (NOT_PROCESSED / PRICED / HOLD / ERROR)</p>
-        <p style="margin-top:4px;"><strong style="color:var(--ink);">USB Eligibility</strong> — SEND_SHIPMENT_USB (Y / N)</p>
-        <p style="margin-top:4px;"><strong style="color:var(--ink);">USB Status</strong> — SENT_TO_USB (NOT_PROCESSED / SENT / PROCESSED)</p>
-        <p style="margin-top:4px;"><strong style="color:var(--ink);">FP Status</strong> — Attribute10. If null → <strong style="color:var(--green);">Processed</strong></p>
-        <p style="margin-top:4px;"><strong style="color:var(--purple);">⚡ Trigger BTF</strong> — Appears only when: FP + TL + BTF Elig = Y + BTF Pricing = NOT_PROCESSED</p>
+      <div class="card-header"><span>ℹ</span><span class="card-title">Actions Guide</span></div>
+      <div class="card-body" style="font-size:12px;color:var(--ink3);line-height:1.9;">
+        <p><strong style="color:var(--purple);">⚡ Trigger BTF</strong> — FP rows only · Mode = TL · BTF Eligibility = Y · BTF Pricing = NOT_PROCESSED</p>
+        <p style="margin-top:5px;"><strong style="color:var(--orange);">📤 Send to PO</strong> — TOC rows only · attributeNumber1 is null or = 2 · Creates FP shipment via OTM PO workflow</p>
+        <p style="margin-top:5px;"><strong style="color:var(--ink);">FP Status</strong> — Attribute10. If null → <strong style="color:var(--green);">Processed</strong>. If populated → shown in red (payment blocked)</p>
       </div>
     </div>
   </div>
@@ -315,14 +326,14 @@ tbody tr.row-fp{background:#fafffe;}
 </div>
 </div>
 
-<!-- BTF CONFIRM MODAL -->
+<!-- MODAL (shared for both BTF and Send to PO) -->
 <div class="overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-icon">⚡</div>
+      <div class="modal-icon" id="modal-icon">⚡</div>
       <div>
-        <div class="modal-title">Trigger BTF Pricing</div>
-        <div class="modal-sub">Send pricing request to OTM for this shipment</div>
+        <div class="modal-title" id="modal-title">—</div>
+        <div class="modal-sub" id="modal-sub">—</div>
       </div>
     </div>
     <div class="modal-body">
@@ -335,23 +346,19 @@ tbody tr.row-fp{background:#fafffe;}
           <span class="modal-lbl">Carrier</span>
           <span class="modal-val" id="modal-carrier">—</span>
         </div>
-        <div class="modal-row">
-          <span class="modal-lbl">Mode</span>
-          <span class="modal-val">TL</span>
-        </div>
-        <div class="modal-row">
-          <span class="modal-lbl">Current BTF Pricing</span>
-          <span class="modal-val" style="color:var(--amber);">NOT_PROCESSED</span>
+        <div class="modal-row" id="modal-extra-row">
+          <span class="modal-lbl" id="modal-extra-lbl">—</span>
+          <span class="modal-val" id="modal-extra-val">—</span>
         </div>
       </div>
-      <div class="modal-warning">
+      <div class="modal-warning" id="modal-warning">
         <span>⚠️</span>
-        <div>This will POST an XML message to OTM WMServlet to trigger the BTF fuel cost calculation workflow. BTF_RATE_IND will update to REPROCESS and OTM will recalculate.</div>
+        <div id="modal-warning-text">—</div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-      <button class="btn-confirm" id="modal-confirm-btn" onclick="confirmTrigger()">⚡ Confirm & Send</button>
+      <button id="modal-confirm-btn" onclick="confirmAction()">Confirm</button>
     </div>
   </div>
 </div>
@@ -361,7 +368,7 @@ tbody tr.row-fp{background:#fafffe;}
 
 <script>
 const API = '';
-let pendingXid = null;
+let pendingAction = null; // { type: 'btf'|'po', xid, carrier }
 
 // ── NAV ──
 function nav(page) {
@@ -370,8 +377,7 @@ function nav(page) {
   document.getElementById('page-' + page).classList.add('active');
   const ni = document.getElementById('nav-' + page);
   if (ni) ni.classList.add('active');
-  const titles = {home:'Home', search:'Search'};
-  document.getElementById('topbar-title').textContent = titles[page] || page;
+  document.getElementById('topbar-title').textContent = {home:'Home',search:'Search'}[page] || page;
 }
 
 // ── SEARCH ──
@@ -398,7 +404,7 @@ async function doSearch() {
   }
 }
 
-// ── STATUS CELL ──
+// ── CELL HELPERS ──
 function stCell(value) {
   if (!value) return `<td><span class="st st-null">—</span></td>`;
   const v = value.toUpperCase();
@@ -409,7 +415,6 @@ function stCell(value) {
   return `<td><span class="st ${cls}">${value}</span></td>`;
 }
 
-// ── FP STATUS CELL ──
 function fpStatusCell(isFP, attr10) {
   if (!isFP) return `<td><span class="st st-null">—</span></td>`;
   const isEmpty = attr10 === null || attr10 === undefined || attr10 === '';
@@ -418,24 +423,34 @@ function fpStatusCell(isFP, attr10) {
     : `<td><span class="st st-err">${attr10}</span></td>`;
 }
 
-// ── BTF TRIGGER BUTTON ──
-function btfActionCell(s) {
+// ── ACTION CELL ──
+function actionCell(s) {
   const isFP   = s.shipmentAsWork;
   const isTL   = (s.transportMode || '').toUpperCase() === 'TL';
   const st     = s.statuses || {};
-  const btfElig  = (st.BTF_SHIP_IND?.value  || '').toUpperCase();
-  const btfPrice = (st.BTF_RATE_IND?.value  || '').toUpperCase();
+  const xid    = s.shipmentXid;
+  const carrier = (s.carrier || '—').replace(/'/g, "\\'");
 
-  if (!isFP || !isTL) {
+  if (isFP) {
+    // BTF Trigger — FP + TL + BTF Elig Y + NOT_PROCESSED
+    const btfElig  = (st.BTF_SHIP_IND?.value  || '').toUpperCase();
+    const btfPrice = (st.BTF_RATE_IND?.value  || '').toUpperCase();
+    if (isTL && btfElig === 'Y' && btfPrice === 'NOT_PROCESSED') {
+      return `<td><button class="btn-btf" id="action-btn-${xid}" onclick="openModal('btf','${xid}','${carrier}')">⚡ Trigger BTF</button></td>`;
+    }
+    if (btfPrice === 'PRICED') {
+      return `<td><span class="st st-ok" style="font-size:10px;">✓ Priced</span></td>`;
+    }
+    return `<td><span class="st st-null">—</span></td>`;
+  } else {
+    // Send to PO — TOC only, attributeNumber1 is null or 2
+    const attrNum1 = s.attributeNumber1;
+    const eligible = attrNum1 === null || attrNum1 === undefined || attrNum1 === '' || String(attrNum1) === '2';
+    if (eligible) {
+      return `<td><button class="btn-po" id="action-btn-${xid}" onclick="openModal('po','${xid}','${carrier}')">📤 Send to PO</button></td>`;
+    }
     return `<td><span class="st st-null">—</span></td>`;
   }
-  if (btfElig === 'Y' && btfPrice === 'NOT_PROCESSED') {
-    return `<td><button class="btn-btf" id="btf-btn-${s.shipmentXid}" onclick="openModal('${s.shipmentXid}','${s.carrier||'—'}')">⚡ Trigger BTF</button></td>`;
-  }
-  if (btfPrice === 'PRICED') {
-    return `<td><span class="st st-ok" style="font-size:10px;">✓ Priced</span></td>`;
-  }
-  return `<td><span class="st st-null">Not eligible</span></td>`;
 }
 
 function renderResults(data) {
@@ -462,13 +477,10 @@ function renderResults(data) {
     const weight = s.totalWeight != null ? `${Number(s.totalWeight).toLocaleString()} ${s.weightUnit||''}` : '—';
     const cost = s.totalActualCost != null
       ? `$${Number(s.totalActualCost).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}` : '—';
-    const typeChip = isFP
-      ? `<span class="chip chip-teal">FP</span>`
-      : `<span class="chip chip-gray">TOC</span>`;
+    const typeChip = isFP ? `<span class="chip chip-teal">FP</span>` : `<span class="chip chip-gray">TOC</span>`;
     const rowCls = isFP ? 'row-fp' : '';
     const st = s.statuses || {};
 
-    // Data source chip
     let srcChip = `<span class="st st-null">—</span>`;
     if (s.dataSource) {
       const dc = s.dataSource.toUpperCase().includes('SAP') ? 'chip-amber' : 'chip-blue';
@@ -480,7 +492,7 @@ function renderResults(data) {
     const usbElig  = isFP ? stCell(st.SEND_SHIPMENT_USB?.value) : `<td><span class="st st-null">—</span></td>`;
     const usbSt    = isFP ? stCell(st.SENT_TO_USB?.value)      : `<td><span class="st st-null">—</span></td>`;
     const fpSt     = fpStatusCell(isFP, s.attribute10);
-    const action   = btfActionCell(s);
+    const action   = actionCell(s);
 
     return `
       <tr class="${rowCls}">
@@ -501,57 +513,90 @@ function renderResults(data) {
 }
 
 // ── MODAL ──
-function openModal(xid, carrier) {
-  pendingXid = xid;
-  document.getElementById('modal-xid').textContent = xid;
+function openModal(type, xid, carrier) {
+  pendingAction = { type, xid, carrier };
+
+  document.getElementById('modal-xid').textContent     = xid;
   document.getElementById('modal-carrier').textContent = carrier;
-  document.getElementById('modal-confirm-btn').disabled = false;
-  document.getElementById('modal-confirm-btn').innerHTML = '⚡ Confirm & Send';
+
+  if (type === 'btf') {
+    document.getElementById('modal-icon').className      = 'modal-icon modal-icon-btf';
+    document.getElementById('modal-icon').textContent    = '⚡';
+    document.getElementById('modal-title').textContent   = 'Trigger BTF Pricing';
+    document.getElementById('modal-sub').textContent     = 'Send BTF reprocess request to OTM WMServlet';
+    document.getElementById('modal-extra-lbl').textContent = 'Current BTF Pricing';
+    document.getElementById('modal-extra-val').textContent = 'NOT_PROCESSED';
+    document.getElementById('modal-extra-val').style.color = 'var(--amber)';
+    document.getElementById('modal-warning').className   = 'modal-warning modal-warning-btf';
+    document.getElementById('modal-warning-text').textContent = 'This will POST an XML message to OTM to trigger BTF fuel cost calculation. BTF_RATE_IND will be set to REPROCESS.';
+    const btn = document.getElementById('modal-confirm-btn');
+    btn.className   = 'btn-confirm-btf';
+    btn.textContent = '⚡ Confirm & Send';
+  } else {
+    document.getElementById('modal-icon').className      = 'modal-icon modal-icon-po';
+    document.getElementById('modal-icon').textContent    = '📤';
+    document.getElementById('modal-title').textContent   = 'Send to PO';
+    document.getElementById('modal-sub').textContent     = 'Trigger FP shipment creation via OTM PO workflow';
+    document.getElementById('modal-extra-lbl').textContent = 'Action';
+    document.getElementById('modal-extra-val').textContent = 'SEND_SHIPMENT_PO - R';
+    document.getElementById('modal-extra-val').style.color = 'var(--orange)';
+    document.getElementById('modal-warning').className   = 'modal-warning modal-warning-po';
+    document.getElementById('modal-warning-text').textContent = 'This will POST an XML message to OTM to trigger the Send to PO workflow. An FP shipment will be created with Data Source = OTM.';
+    const btn = document.getElementById('modal-confirm-btn');
+    btn.className   = 'btn-confirm-po';
+    btn.textContent = '📤 Confirm & Send';
+  }
+
   document.getElementById('modal-overlay').classList.add('open');
 }
 
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
-  pendingXid = null;
+  pendingAction = null;
 }
 
 function handleOverlayClick(e) {
   if (e.target === document.getElementById('modal-overlay')) closeModal();
 }
 
-async function confirmTrigger() {
-  if (!pendingXid) return;
-  const xid = pendingXid;
+async function confirmAction() {
+  if (!pendingAction) return;
+  const { type, xid } = pendingAction;
   const confirmBtn = document.getElementById('modal-confirm-btn');
   confirmBtn.disabled = true;
   confirmBtn.innerHTML = '<span class="spinner"></span> Sending...';
 
   // Update row button to sending state
-  const rowBtn = document.getElementById(`btf-btn-${xid}`);
-  if (rowBtn) rowBtn.outerHTML = `<span class="btn-btf-sending" id="btf-btn-${xid}"><span class="spinner spinner-purple"></span> Sending...</span>`;
+  const rowBtn = document.getElementById(`action-btn-${xid}`);
+  if (rowBtn) rowBtn.outerHTML = `<span class="btn-sending" id="action-btn-${xid}"><span class="spinner spinner-dark" style="width:10px;height:10px;border-top-color:var(--ink3);"></span> Sending...</span>`;
+
+  const endpoint = type === 'btf'
+    ? `${API}/api/trigger-btf/${encodeURIComponent(xid)}`
+    : `${API}/api/send-to-po/${encodeURIComponent(xid)}`;
 
   try {
-    const resp = await fetch(`${API}/api/trigger-btf/${encodeURIComponent(xid)}`, {
-      method: 'POST',
-    });
+    const resp = await fetch(endpoint, { method: 'POST' });
     const data = await resp.json();
-
     closeModal();
 
     if (data.status === 'ok') {
-      // Update button to success state
-      const btn = document.getElementById(`btf-btn-${xid}`);
-      if (btn) btn.outerHTML = `<span class="btn-btf-sent">✅ Triggered</span>`;
-      showToast(`✅ BTF trigger sent for ${xid}`, 'ok');
+      const btn = document.getElementById(`action-btn-${xid}`);
+      if (btn) btn.outerHTML = `<span class="btn-sent-ok">✅ Sent</span>`;
+      const label = type === 'btf' ? 'BTF trigger' : 'Send to PO';
+      showToast(`✅ ${label} sent for ${xid}`, 'ok');
     } else {
-      const btn = document.getElementById(`btf-btn-${xid}`);
-      if (btn) btn.outerHTML = `<button class="btn-btf" id="btf-btn-${xid}" onclick="openModal('${xid}','')">⚡ Retry</button>`;
+      const btn = document.getElementById(`action-btn-${xid}`);
+      const btnClass = type === 'btf' ? 'btn-btf' : 'btn-po';
+      const btnLabel = type === 'btf' ? '⚡ Retry' : '📤 Retry';
+      if (btn) btn.outerHTML = `<button class="${btnClass}" id="action-btn-${xid}" onclick="openModal('${type}','${xid}','')">${btnLabel}</button>`;
       showToast(`❌ OTM returned HTTP ${data.httpStatus}`, 'err');
     }
   } catch (err) {
     closeModal();
-    const btn = document.getElementById(`btf-btn-${xid}`);
-    if (btn) btn.outerHTML = `<button class="btn-btf" id="btf-btn-${xid}" onclick="openModal('${xid}','')">⚡ Retry</button>`;
+    const btn = document.getElementById(`action-btn-${xid}`);
+    const btnClass = type === 'btf' ? 'btn-btf' : 'btn-po';
+    const btnLabel = type === 'btf' ? '⚡ Retry' : '📤 Retry';
+    if (btn) btn.outerHTML = `<button class="${btnClass}" id="action-btn-${xid}" onclick="openModal('${type}','${xid}','')">${btnLabel}</button>`;
     showToast(`❌ Error: ${err.message}`, 'err');
   }
 }

@@ -33,7 +33,7 @@ SEARCH_FIELDS = (
     "destLocation.locationXid,"
     "startTime,endTime,"
     "totalWeight,totalVolume,totalActualCost,"
-    "attribute10,"
+    "attribute10,attributeNumber1,"
     "statuses,refnums"
 )
 
@@ -45,7 +45,7 @@ DETAIL_FIELDS = (
     "startTime,endTime,"
     "totalWeight,totalVolume,totalActualCost,"
     "shipmentAsWork,"
-    "attribute1,attribute2,attribute5,attribute10,"
+    "attribute10,attributeNumber1,"
     "insertDate,updateDate,"
     "statuses,refnums"
 )
@@ -68,10 +68,9 @@ FP_STATUS_TYPES = {
     "SENT_TO_USB",
 }
 
-# Refnum qualifier for Data Source
 DATA_SOURCE_QUALIFIER = "DATA_SOURCE"
 
-# OTM WMServlet endpoint for BTF trigger
+# OTM WMServlet endpoint
 OTM_WMSERVLET = "https://otmgtm-a629995.otmgtm.us-phoenix-1.ocs.oraclecloud.com/GC3/glog.integration.servlet.WMServlet"
 
 # ── HELPERS ─────────────────────────────────────────────
@@ -125,7 +124,6 @@ def parse_inline_statuses(raw_statuses: dict) -> dict:
     return result
 
 def parse_refnums(raw_refnums: dict) -> Optional[str]:
-    """Extract DATA_SOURCE value from refnums."""
     for item in (raw_refnums or {}).get("items", []):
         qualifier = item.get("shipmentRefnumQualGid", "")
         if "." in qualifier:
@@ -148,35 +146,34 @@ def parse_shipment(raw: dict) -> dict:
 
     statuses    = parse_inline_statuses(raw.get("statuses", {}))
     data_source = parse_refnums(raw.get("refnums", {}))
-
-    is_fp = raw.get("shipmentAsWork", False) or "SEND_SHIPMENT_USB" in statuses
+    is_fp       = raw.get("shipmentAsWork", False) or "SEND_SHIPMENT_USB" in statuses
 
     return {
-        "shipmentXid":     raw.get("shipmentXid"),
-        "shipmentName":    raw.get("shipmentName"),
-        "transportMode":   raw.get("transportModeGid"),
-        "carrier":         extract_xid_from_link(svc_links),
-        "sourceLocation":  extract_xid_from_link(src_links),
-        "destLocation":    extract_xid_from_link(dst_links),
-        "startTime":       start.get("value"),
-        "endTime":         end.get("value"),
-        "insertDate":      ins.get("value"),
-        "updateDate":      upd.get("value"),
-        "totalWeight":     weight.get("value"),
-        "weightUnit":      weight.get("unit"),
-        "totalVolume":     volume.get("value"),
-        "volumeUnit":      volume.get("unit"),
-        "totalActualCost": cost.get("value"),
-        "currency":        cost.get("currency"),
-        "shipmentAsWork":  is_fp,
-        "perspective":     raw.get("perspective"),
-        "attribute10":     raw.get("attribute10"),
-        "dataSource":      data_source,
-        "statuses":        statuses,
+        "shipmentXid":      raw.get("shipmentXid"),
+        "shipmentName":     raw.get("shipmentName"),
+        "transportMode":    raw.get("transportModeGid"),
+        "carrier":          extract_xid_from_link(svc_links),
+        "sourceLocation":   extract_xid_from_link(src_links),
+        "destLocation":     extract_xid_from_link(dst_links),
+        "startTime":        start.get("value"),
+        "endTime":          end.get("value"),
+        "insertDate":       ins.get("value"),
+        "updateDate":       upd.get("value"),
+        "totalWeight":      weight.get("value"),
+        "weightUnit":       weight.get("unit"),
+        "totalVolume":      volume.get("value"),
+        "volumeUnit":       volume.get("unit"),
+        "totalActualCost":  cost.get("value"),
+        "currency":         cost.get("currency"),
+        "shipmentAsWork":   is_fp,
+        "perspective":      raw.get("perspective"),
+        "attribute10":      raw.get("attribute10"),
+        "attributeNumber1": raw.get("attributeNumber1"),
+        "dataSource":       data_source,
+        "statuses":         statuses,
     }
 
 def build_btf_payload(shipment_xid: str) -> str:
-    """Build the XML payload for BTF trigger with the shipment XID injected."""
     return f"""<?xml version="1.0" encoding="UTF-8"?>
 <otm:Transmission xmlns:otm="http://xmlns.oracle.com/apps/otm/transmission/v6.4" xmlns:gtm="http://xmlns.oracle.com/apps/gtm/transmission/v6.4">
     <otm:TransmissionHeader>
@@ -224,6 +221,39 @@ def build_btf_payload(shipment_xid: str) -> str:
     </otm:TransmissionBody>
 </otm:Transmission>"""
 
+def build_send_to_po_payload(shipment_xid: str) -> str:
+    return f"""<?xml version="1.0" encoding="UTF-8"?>
+<otm:Transmission xmlns:otm="http://xmlns.oracle.com/apps/otm/transmission/v6.4" xmlns:gtm="http://xmlns.oracle.com/apps/gtm/transmission/v6.4">
+    <otm:TransmissionHeader>
+    </otm:TransmissionHeader>
+    <otm:TransmissionBody>
+        <otm:GLogXMLElement>
+            <otm:GenericStatusUpdate>
+                <otm:GenericStatusObjectType>SHIPMENT</otm:GenericStatusObjectType>
+                <otm:Gid>
+                    <otm:DomainName>KRAFT/KFNA</otm:DomainName>
+                    <otm:Xid>{shipment_xid}</otm:Xid>
+                </otm:Gid>
+                <otm:TransactionCode>IU</otm:TransactionCode>
+                <otm:Status>
+                    <otm:StatusTypeGid>
+                        <otm:Gid>
+                            <otm:DomainName>KRAFT/KFNA</otm:DomainName>
+                            <otm:Xid>SEND_SHIPMENT_PO</otm:Xid>
+                        </otm:Gid>
+                    </otm:StatusTypeGid>
+                    <otm:StatusValueGid>
+                        <otm:Gid>
+                            <otm:DomainName>KRAFT/KFNA</otm:DomainName>
+                            <otm:Xid>SEND_SHIPMENT_PO - R</otm:Xid>
+                        </otm:Gid>
+                    </otm:StatusValueGid>
+                </otm:Status>
+            </otm:GenericStatusUpdate>
+        </otm:GLogXMLElement>
+    </otm:TransmissionBody>
+</otm:Transmission>"""
+
 async def fetch_query(client: httpx.AsyncClient, url: str, query_name: str) -> dict:
     try:
         resp = await client.get(url, auth=(OTM_USER, OTM_PASS), timeout=30)
@@ -251,16 +281,12 @@ async def fetch_query(client: httpx.AsyncClient, url: str, query_name: str) -> d
 # ── ROUTES ──────────────────────────────────────────────
 
 @app.get("/api/search")
-async def search(
-    q: str = Query(..., description="Search value"),
-):
+async def search(q: str = Query(..., description="Search value")):
     urls = [build_search_url(qn, q) for qn in ALL_QUERIES]
-
     async with httpx.AsyncClient(verify=False) as client:
         results = await asyncio.gather(
             *[fetch_query(client, url, qn) for url, qn in zip(urls, ALL_QUERIES)]
         )
-
     seen = set()
     merged = []
     for result in results:
@@ -269,7 +295,6 @@ async def search(
             if xid not in seen:
                 seen.add(xid)
                 merged.append(item)
-
     return {
         "searchValue": q,
         "totalCount":  len(merged),
@@ -281,19 +306,37 @@ async def search(
 
 @app.post("/api/trigger-btf/{shipment_xid}")
 async def trigger_btf(shipment_xid: str):
-    """
-    POST XML payload to OTM WMServlet to trigger BTF pricing
-    for the given shipment XID.
-    """
+    """POST XML to OTM WMServlet to trigger BTF pricing reprocess."""
     payload = build_btf_payload(shipment_xid)
-    headers = {"Content-Type": "application/xml"}
-
     try:
         async with httpx.AsyncClient(verify=False) as client:
             resp = await client.post(
                 OTM_WMSERVLET,
                 content=payload.encode("utf-8"),
-                headers=headers,
+                headers={"Content-Type": "application/xml"},
+                auth=(OTM_USER, OTM_PASS),
+                timeout=30,
+            )
+        return {
+            "status":      "ok" if resp.status_code < 400 else "error",
+            "httpStatus":  resp.status_code,
+            "shipmentXid": shipment_xid,
+            "response":    resp.text[:500],
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/send-to-po/{shipment_xid}")
+async def send_to_po(shipment_xid: str):
+    """POST XML to OTM WMServlet to trigger Send to PO workflow for TOC shipment."""
+    payload = build_send_to_po_payload(shipment_xid)
+    try:
+        async with httpx.AsyncClient(verify=False) as client:
+            resp = await client.post(
+                OTM_WMSERVLET,
+                content=payload.encode("utf-8"),
+                headers={"Content-Type": "application/xml"},
                 auth=(OTM_USER, OTM_PASS),
                 timeout=30,
             )
