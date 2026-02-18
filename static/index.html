@@ -228,7 +228,7 @@ tbody tr.row-fp{background:#fafffe;}
         <button class="btn btn-primary" id="search-btn" onclick="doSearch()">Search OTM</button>
       </div>
       <div style="margin-top:10px;font-size:11px;color:var(--ink4);">
-        Runs <span class="mono">FP_SHP_NAME_DIRECT</span> + <span class="mono">FP_SHP_NAME_INDIRECT</span> + <span class="mono">FP_ORD_DIRECT</span> + <span class="mono">FP_ORD_INDIRECT</span> in parallel
+        Runs <span class="mono">FP_SHP_NAME_DIRECT</span> + <span class="mono">FP_SHP_NAME_INDIRECT</span> + <span class="mono">FP_ORD_DIRECT</span> + <span class="mono">FP_ORD_INDIRECT</span> + <span class="mono">FP_ORD_PL_SHP_DIRECT</span> in parallel
       </div>
     </div>
 
@@ -341,7 +341,7 @@ function renderResults(data) {
   document.getElementById('search-results').style.display = 'block';
   const meta = document.getElementById('result-meta');
   let mh = `<span style="font-size:13px;font-weight:600;color:var(--ink3);">${data.totalCount} shipment${data.totalCount!==1?'s':''} found</span>`;
-  mh += ` <span style="font-size:12px;color:var(--ink4);">· Live from OTM · All 4 queries</span>`;
+  mh += ` <span style="font-size:12px;color:var(--ink4);">· Live from OTM · All 5 queries</span>`;
   (data.queries||[]).forEach(q => {
     const cls = q.count > 0 ? 'query-tag has-results' : 'query-tag';
     const lbl = (q.name||'').split('.').pop();

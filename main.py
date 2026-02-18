@@ -50,12 +50,13 @@ DETAIL_FIELDS = (
     "statuses,refnums"
 )
 
-# All 4 queries run for every search regardless of type
+# All 5 queries run for every search regardless of type
 ALL_QUERIES = [
     f"{OTM_SUBDOMAIN}.FP_SHP_NAME_DIRECT",
     f"{OTM_SUBDOMAIN}.FP_SHP_NAME_INDIRECT",
     f"{OTM_SUBDOMAIN}.FP_ORD_DIRECT",
     f"{OTM_SUBDOMAIN}.FP_ORD_INDIRECT",
+    f"{OTM_SUBDOMAIN}.FP_ORD_PL_SHP_DIRECT",
 ]
 
 # The 4 FP status types we care about
