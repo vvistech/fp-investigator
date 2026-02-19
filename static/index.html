@@ -318,8 +318,8 @@ tbody tr.row-fp{background:#fafffe;}
           <table>
             <thead>
               <tr>
-                <th>Shipment ID</th><th>Name</th><th>Src</th><th>Mode</th><th>Carrier</th>
-                <th>Origin</th><th>Dest</th><th>Start</th><th>Weight</th><th>Cost (USD)</th><th>Type</th>
+                <th>Shipment ID</th><th>Name</th><th>Type</th><th>Src</th><th>Mode</th><th>Carrier</th>
+                <th>Origin</th><th>Dest</th><th>Start</th><th>Weight</th><th>Cost (USD)</th>
                 <th class="status-col">BTF Elig</th><th class="status-col">BTF Pricing</th>
                 <th class="status-col">USB Elig</th><th class="status-col">USB Status</th>
                 <th class="fp-col">FP Status</th><th class="action-col">Actions</th>
@@ -543,6 +543,7 @@ function renderResults(data) {
       <tr class="${rowCls}">
         <td class="mono" style="color:var(--blue);font-weight:600;font-size:11px;">${s.shipmentXid||'—'}</td>
         <td class="mono">${s.shipmentName||'—'}</td>
+        <td>${typeChip}</td>
         <td>${srcChip}</td>
         <td><span class="chip chip-gray">${s.transportMode||'—'}</span></td>
         <td style="font-weight:500;">${s.carrier||'—'}</td>
@@ -551,7 +552,6 @@ function renderResults(data) {
         <td style="color:var(--ink3);">${startDate}</td>
         <td>${weight}</td>
         <td style="font-weight:600;">${cost}</td>
-        <td>${typeChip}</td>
         ${btfElig}${btfPrice}${usbElig}${usbSt}${fpSt}${action}
       </tr>`;
   }).join('');
@@ -711,6 +711,7 @@ function renderBulkResults(data) {
         return `<tr class="${rowCls}">
           <td class="mono" style="color:var(--blue);font-weight:600;font-size:11px;">${s.shipmentXid||'—'}</td>
           <td class="mono">${s.shipmentName||'—'}</td>
+          <td>${typeChip}</td>
           <td>${srcChip}</td>
           <td><span class="chip chip-gray">${s.transportMode||'—'}</span></td>
           <td style="font-weight:500;">${s.carrier||'—'}</td>
@@ -719,7 +720,6 @@ function renderBulkResults(data) {
           <td style="color:var(--ink3);">${startDate}</td>
           <td>${weight}</td>
           <td style="font-weight:600;">${cost}</td>
-          <td>${typeChip}</td>
           ${btfElig}${btfPrice}${usbElig}${usbSt}${fpSt}${action}
         </tr>`;
       }).join('');
@@ -736,8 +736,8 @@ function renderBulkResults(data) {
           <div class="table-wrap">
             <table>
               <thead><tr>
-                <th>Shipment ID</th><th>Name</th><th>Src</th><th>Mode</th><th>Carrier</th>
-                <th>Origin</th><th>Dest</th><th>Start</th><th>Weight</th><th>Cost (USD)</th><th>Type</th>
+                <th>Shipment ID</th><th>Name</th><th>Type</th><th>Src</th><th>Mode</th><th>Carrier</th>
+                <th>Origin</th><th>Dest</th><th>Start</th><th>Weight</th><th>Cost (USD)</th>
                 <th class="status-col">BTF Elig</th><th class="status-col">BTF Pricing</th>
                 <th class="status-col">USB Elig</th><th class="status-col">USB Status</th>
                 <th class="fp-col">FP Status</th><th class="action-col">Actions</th>
