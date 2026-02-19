@@ -272,6 +272,10 @@ tbody tr.row-fp{background:#fafffe;}
       </div>
     </div>
 
+    <div id="refresh-bar" style="display:none;align-items:center;gap:10px;background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:9px 14px;margin-bottom:12px;font-size:12px;color:var(--blue);">
+      <span>✅ Action sent to OTM successfully. Dependent workflows may still be running.</span>
+      <button class="btn btn-primary" style="padding:5px 14px;font-size:11px;margin-left:auto;" onclick="doSearch();hideRefreshBar();">↻ Refresh Results</button>
+    </div>
     <div id="search-error" class="error-banner" style="display:none;"><span>⚠</span><div id="search-error-text"></div></div>
     <div class="state-box" id="search-empty">
       <div class="icon">⌕</div>
@@ -295,7 +299,7 @@ tbody tr.row-fp{background:#fafffe;}
                 <th>Shipment ID</th><th>Name</th><th>Type</th><th>Src</th><th>Mode</th><th>Carrier</th>
                 <th>Origin</th><th>Dest</th><th>Start</th><th>Weight</th><th>Cost (USD)</th>
                 <th class="status-col">BTF Elig</th><th class="status-col">BTF Pricing</th>
-                <th class="status-col">USB Elig</th><th class="status-col">USB Status</th>
+                <th class="status-col">USB Status</th>
                 <th class="fp-col">FP Status</th><th class="action-col">Actions</th>
               </tr>
             </thead>
@@ -354,7 +358,8 @@ tbody tr.row-fp{background:#fafffe;}
 
 <script>
 const API = '';
-let pendingAction = null; // { type: 'btf'|'po', xid, carrier }
+let pendingAction = null; // { type: 'btf'|'po'|'usb', xid, carrier }
+let actionInFlight = false; // prevent double-submit
 
 // ── NAV ──
 function nav(page) {
@@ -384,6 +389,7 @@ async function doSearch() {
   const isBulk = vals.length > 1;
 
   // Reset state
+  hideRefreshBar();
   document.getElementById('search-empty').style.display = 'none';
   document.getElementById('search-results').style.display = 'none';
   document.getElementById('bulk-results').style.display = 'none';
@@ -449,18 +455,26 @@ function fpStatusCell(isFP, attr10) {
 
 // ── ACTION CELL ──
 function actionCell(s) {
-  const isFP   = s.shipmentAsWork;
-  const isTL   = (s.transportMode || '').toUpperCase() === 'TL';
-  const st     = s.statuses || {};
-  const xid    = s.shipmentXid;
+  const isFP    = s.shipmentAsWork;
+  const isTL    = (s.transportMode || '').toUpperCase() === 'TL';
+  const st      = s.statuses || {};
+  const xid     = s.shipmentXid;
   const carrier = (s.carrier || '—').replace(/'/g, "\\'");
+  const attr10  = s.attribute10;
+  const fpBlocked = attr10 !== null && attr10 !== undefined && attr10 !== '';
 
   if (isFP) {
-    // BTF Trigger — FP + TL + BTF Elig Y + NOT_PROCESSED
-    const btfElig  = (st.BTF_SHIP_IND?.value  || '').toUpperCase();
-    const btfPrice = (st.BTF_RATE_IND?.value  || '').toUpperCase();
+    const btfElig   = (st.BTF_SHIP_IND?.value       || '').toUpperCase();
+    const btfPrice  = (st.BTF_RATE_IND?.value        || '').toUpperCase();
+    const usbStatus = (st.SEND_SHIPMENT_USB?.value   || '').toUpperCase();
+
+    // BTF Trigger — TL + BTF Elig Y + NOT_PROCESSED
     if (isTL && btfElig === 'Y' && btfPrice === 'NOT_PROCESSED') {
       return `<td><button class="btn-btf" id="action-btn-${xid}" onclick="openModal('btf','${xid}','${carrier}')">⚡ Trigger BTF</button></td>`;
+    }
+    // USB Trigger — SEND_SHIPMENT_USB = N (workflow inserted it) + FP Status blank
+    if (usbStatus === 'N' && !fpBlocked) {
+      return `<td><button class="btn-usb" id="action-btn-${xid}" onclick="openModal('usb','${xid}','${carrier}')">📡 Trigger USB</button></td>`;
     }
     if (btfPrice === 'PRICED') {
       return `<td><span class="st st-ok" style="font-size:10px;">✓ Priced</span></td>`;
@@ -486,7 +500,7 @@ function renderResults(data) {
 
   const tbody = document.getElementById('results-body');
   if (!data.items || data.items.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="17" style="text-align:center;padding:28px;color:var(--ink4);">No shipments found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="16" style="text-align:center;padding:28px;color:var(--ink4);">No shipments found.</td></tr>`;
     return;
   }
 
@@ -508,8 +522,7 @@ function renderResults(data) {
 
     const btfElig  = isFP ? stCell(st.BTF_SHIP_IND?.value)     : `<td><span class="st st-null">—</span></td>`;
     const btfPrice = isFP ? stCell(st.BTF_RATE_IND?.value)     : `<td><span class="st st-null">—</span></td>`;
-    const usbElig  = isFP ? stCell(st.SEND_SHIPMENT_USB?.value) : `<td><span class="st st-null">—</span></td>`;
-    const usbSt    = isFP ? stCell(st.SENT_TO_USB?.value)      : `<td><span class="st st-null">—</span></td>`;
+    const usbSt    = isFP ? stCell(st.SEND_SHIPMENT_USB?.value) : `<td><span class="st st-null">—</span></td>`;
     const fpSt     = fpStatusCell(isFP, s.attribute10);
     const action   = actionCell(s);
 
@@ -526,7 +539,7 @@ function renderResults(data) {
         <td style="color:var(--ink3);">${startDate}</td>
         <td>${weight}</td>
         <td style="font-weight:600;">${cost}</td>
-        ${btfElig}${btfPrice}${usbElig}${usbSt}${fpSt}${action}
+        ${btfElig}${btfPrice}${usbSt}${fpSt}${action}
       </tr>`;
   }).join('');
 }
@@ -585,6 +598,7 @@ function openModal(type, xid, carrier) {
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
   pendingAction = null;
+  actionInFlight = false;
 }
 
 function handleOverlayClick(e) {
@@ -592,10 +606,12 @@ function handleOverlayClick(e) {
 }
 
 async function confirmAction() {
-  if (!pendingAction) return;
+  if (!pendingAction || actionInFlight) return;
+  actionInFlight = true;
   const { type, xid } = pendingAction;
   const confirmBtn = document.getElementById('modal-confirm-btn');
   confirmBtn.disabled = true;
+  confirmBtn.style.pointerEvents = 'none';
   confirmBtn.innerHTML = '<span class="spinner"></span> Sending...';
 
   // Update row button to sending state
@@ -615,8 +631,8 @@ async function confirmAction() {
 
     if (data.status === 'ok') {
       const label = type === 'btf' ? 'BTF trigger' : type === 'usb' ? 'USB trigger' : 'Send to PO';
-      showToast(`✅ ${label} sent for ${xid} — refreshing...`, 'ok');
-      await doSearch();
+      showToast(`✅ ${label} sent for ${xid}`, 'ok');
+      showRefreshBar();
     } else {
       const btn = document.getElementById(`action-btn-${xid}`);
       const btnClass = type === 'btf' ? 'btn-btf' : type === 'usb' ? 'btn-usb' : 'btn-po';
@@ -631,7 +647,20 @@ async function confirmAction() {
     const btnLabel = type === 'btf' ? '⚡ Retry' : type === 'usb' ? '📡 Retry' : '📤 Retry';
     if (btn) btn.outerHTML = `<button class="${btnClass}" id="action-btn-${xid}" onclick="openModal('${type}','${xid}','')">${btnLabel}</button>`;
     showToast(`❌ Error: ${err.message}`, 'err');
+  } finally {
+    actionInFlight = false;
   }
+}
+
+// ── REFRESH BAR ──
+function showRefreshBar() {
+  const bar = document.getElementById('refresh-bar');
+  if (bar) bar.style.display = 'flex';
+}
+
+function hideRefreshBar() {
+  const bar = document.getElementById('refresh-bar');
+  if (bar) bar.style.display = 'none';
 }
 
 // ── TOAST ──
@@ -673,7 +702,7 @@ function renderBulkResults(data) {
     // Rows
     let rowsHtml = '';
     if (!hasResults) {
-      rowsHtml = `<tr><td colspan="17" style="text-align:center;padding:20px;color:var(--ink4);font-size:12px;">
+      rowsHtml = `<tr><td colspan="16" style="text-align:center;padding:20px;color:var(--ink4);font-size:12px;">
         ${hasError ? `⚠ ${group.errors[0]}` : 'No shipments found for this value.'}</td></tr>`;
     } else {
       rowsHtml = group.items.map(s => {
@@ -692,8 +721,7 @@ function renderBulkResults(data) {
         }
         const btfElig  = isFP ? stCell(st.BTF_SHIP_IND?.value)     : `<td><span class="st st-null">—</span></td>`;
         const btfPrice = isFP ? stCell(st.BTF_RATE_IND?.value)     : `<td><span class="st st-null">—</span></td>`;
-        const usbElig  = isFP ? stCell(st.SEND_SHIPMENT_USB?.value) : `<td><span class="st st-null">—</span></td>`;
-        const usbSt    = isFP ? stCell(st.SENT_TO_USB?.value)      : `<td><span class="st st-null">—</span></td>`;
+        const usbSt    = isFP ? stCell(st.SEND_SHIPMENT_USB?.value) : `<td><span class="st st-null">—</span></td>`;
         const fpSt     = fpStatusCell(isFP, s.attribute10);
         const action   = actionCell(s);
         return `<tr class="${rowCls}">
@@ -708,7 +736,7 @@ function renderBulkResults(data) {
           <td style="color:var(--ink3);">${startDate}</td>
           <td>${weight}</td>
           <td style="font-weight:600;">${cost}</td>
-          ${btfElig}${btfPrice}${usbElig}${usbSt}${fpSt}${action}
+          ${btfElig}${btfPrice}${usbSt}${fpSt}${action}
         </tr>`;
       }).join('');
     }
@@ -727,7 +755,7 @@ function renderBulkResults(data) {
                 <th>Shipment ID</th><th>Name</th><th>Type</th><th>Src</th><th>Mode</th><th>Carrier</th>
                 <th>Origin</th><th>Dest</th><th>Start</th><th>Weight</th><th>Cost (USD)</th>
                 <th class="status-col">BTF Elig</th><th class="status-col">BTF Pricing</th>
-                <th class="status-col">USB Elig</th><th class="status-col">USB Status</th>
+                <th class="status-col">USB Status</th>
                 <th class="fp-col">FP Status</th><th class="action-col">Actions</th>
               </tr></thead>
               <tbody>${rowsHtml}</tbody>
