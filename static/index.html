@@ -440,7 +440,7 @@ function stCell(value) {
   const v = value.toUpperCase();
   let cls = 'st-null';
   if (['Y','PRICED','PROCESSED','SENT'].includes(v)) cls = 'st-ok';
-  else if (['N','NOT_PROCESSED'].includes(v)) cls = 'st-warn';
+  else if (['N','NOT_PROCESSED','REPROCESS'].includes(v)) cls = 'st-warn';
   else if (['ERROR','HOLD'].includes(v)) cls = 'st-err';
   return `<td><span class="st ${cls}">${value}</span></td>`;
 }
@@ -470,11 +470,11 @@ function actionCell(s) {
 
     // BTF Trigger — TL + BTF Elig Y + NOT_PROCESSED or REPROCESS
     if (isTL && btfElig === 'Y' && (btfPrice === 'NOT_PROCESSED' || btfPrice === 'REPROCESS')) {
-      return `<td><button class="btn-btf" id="action-btn-${xid}" onclick="openModal('btf','${xid}','${carrier}')">⚡ Trigger BTF</button></td>`;
+      return `<td><button class="btn-btf" id="action-btn-${xid}" onclick="openModal('btf','${xid}','${carrier}',this)">⚡ Trigger BTF</button></td>`;
     }
     // USB Trigger — BTF REPROCESS + SEND_SHIPMENT_USB = N + FP Status blank
     if (btfPrice === 'REPROCESS' && usbStatus === 'N' && !fpBlocked) {
-      return `<td><button class="btn-usb" id="action-btn-${xid}" onclick="openModal('usb','${xid}','${carrier}')">📡 Trigger USB</button></td>`;
+      return `<td><button class="btn-usb" id="action-btn-${xid}" onclick="openModal('usb','${xid}','${carrier}',this)">📡 Trigger USB</button></td>`;
     }
     if (btfPrice === 'PRICED') {
       return `<td><span class="st st-ok" style="font-size:10px;">✓ Priced</span></td>`;
@@ -491,7 +491,7 @@ function actionCell(s) {
     const attrNum1 = s.attributeNumber1;
     const eligible = attrNum1 === null || attrNum1 === undefined || attrNum1 === '' || String(attrNum1) === '2';
     if (eligible) {
-      return `<td><button class="btn-po" id="action-btn-${xid}" onclick="openModal('po','${xid}','${carrier}')">📤 Send to PO</button></td>`;
+      return `<td><button class="btn-po" id="action-btn-${xid}" onclick="openModal('po','${xid}','${carrier}',this)">📤 Send to PO</button></td>`;
     }
     return `<td><span class="st st-null">—</span></td>`;
   }
@@ -528,7 +528,7 @@ function renderResults(data) {
 
     const btfElig  = isFP ? stCell(st.BTF_SHIP_IND?.value)     : `<td><span class="st st-null">—</span></td>`;
     const btfPrice = isFP ? stCell(st.BTF_RATE_IND?.value)     : `<td><span class="st st-null">—</span></td>`;
-    const usbSt    = isFP ? stCell(st.SEND_SHIPMENT_USB?.value) : `<td><span class="st st-null">—</span></td>`;
+    const usbSt    = isFP ? stCell(st.SENT_TO_USB?.value) : `<td><span class="st st-null">—</span></td>`;
     const fpSt     = fpStatusCell(isFP, s.attribute10);
     const action   = actionCell(s);
 
@@ -551,8 +551,8 @@ function renderResults(data) {
 }
 
 // ── MODAL ──
-function openModal(type, xid, carrier) {
-  pendingAction = { type, xid, carrier };
+function openModal(type, xid, carrier, btnEl) {
+  pendingAction = { type, xid, carrier, btnEl: btnEl || null };
 
   document.getElementById('modal-xid').textContent     = xid;
   document.getElementById('modal-carrier').textContent = carrier;
@@ -620,8 +620,8 @@ async function confirmAction() {
   confirmBtn.style.pointerEvents = 'none';
   confirmBtn.innerHTML = '<span class="spinner"></span> Sending...';
 
-  // Update row button to sending state
-  const rowBtn = document.getElementById(`action-btn-${xid}`);
+  // Update row button to sending state — use stored element ref, not getElementById (avoids dupe ID issue in bulk)
+  const rowBtn = pendingAction.btnEl;
   if (rowBtn) rowBtn.outerHTML = `<span class="btn-sending" id="action-btn-${xid}"><span class="spinner spinner-dark" style="width:10px;height:10px;border-top-color:var(--ink3);"></span> Sending...</span>`;
 
   const endpoint = type === 'btf'
@@ -647,7 +647,7 @@ async function confirmAction() {
       showRefreshBar();
     } else {
       // Restore button to retry state
-      if (btn) btn.outerHTML = `<button class="${btnClass}" id="action-btn-${xid}" onclick="openModal('${type}','${xid}','')">${btnLabel}</button>`;
+      if (btn) btn.outerHTML = `<button class="${btnClass}" id="action-btn-${xid}" onclick="openModal('${type}','${xid}','',this)">${btnLabel}</button>`;
       showToast(`❌ OTM returned HTTP ${data.httpStatus}`, 'err');
     }
   } catch (err) {
@@ -655,7 +655,7 @@ async function confirmAction() {
     const btn = document.getElementById(`action-btn-${xid}`);
     const btnClass = type === 'btf' ? 'btn-btf' : type === 'usb' ? 'btn-usb' : 'btn-po';
     const btnLabel = type === 'btf' ? '⚡ Retry' : type === 'usb' ? '📡 Retry' : '📤 Retry';
-    if (btn) btn.outerHTML = `<button class="${btnClass}" id="action-btn-${xid}" onclick="openModal('${type}','${xid}','')">${btnLabel}</button>`;
+    if (btn) btn.outerHTML = `<button class="${btnClass}" id="action-btn-${xid}" onclick="openModal('${type}','${xid}','',this)">${btnLabel}</button>`;
     showToast(`❌ Error: ${err.message}`, 'err');
   } finally {
     actionsInFlight.delete(xid);
@@ -731,7 +731,7 @@ function renderBulkResults(data) {
         }
         const btfElig  = isFP ? stCell(st.BTF_SHIP_IND?.value)     : `<td><span class="st st-null">—</span></td>`;
         const btfPrice = isFP ? stCell(st.BTF_RATE_IND?.value)     : `<td><span class="st st-null">—</span></td>`;
-        const usbSt    = isFP ? stCell(st.SEND_SHIPMENT_USB?.value) : `<td><span class="st st-null">—</span></td>`;
+        const usbSt    = isFP ? stCell(st.SENT_TO_USB?.value) : `<td><span class="st st-null">—</span></td>`;
         const fpSt     = fpStatusCell(isFP, s.attribute10);
         const action   = actionCell(s);
         return `<tr class="${rowCls}">
