@@ -528,7 +528,7 @@ function renderResults(data) {
 
     const btfElig  = isFP ? stCell(st.BTF_SHIP_IND?.value)     : `<td><span class="st st-null">—</span></td>`;
     const btfPrice = isFP ? stCell(st.BTF_RATE_IND?.value)     : `<td><span class="st st-null">—</span></td>`;
-    const usbSt    = isFP ? stCell(st.SENT_TO_USB?.value) : `<td><span class="st st-null">—</span></td>`;
+    const usbSt    = isFP ? stCell(st.SEND_SHIPMENT_USB?.value) : `<td><span class="st st-null">—</span></td>`;
     const fpSt     = fpStatusCell(isFP, s.attribute10);
     const action   = actionCell(s);
 
@@ -598,6 +598,11 @@ function openModal(type, xid, carrier, btnEl) {
     btn.textContent = '📤 Confirm & Send';
   }
 
+  // Reset confirm button state (may have been disabled by a prior action)
+  const confirmBtn = document.getElementById('modal-confirm-btn');
+  confirmBtn.disabled = false;
+  confirmBtn.style.pointerEvents = '';
+
   document.getElementById('modal-overlay').classList.add('open');
 }
 
@@ -612,17 +617,23 @@ function handleOverlayClick(e) {
 
 async function confirmAction() {
   if (!pendingAction) return;
-  const { type, xid } = pendingAction;
+  // Capture everything upfront before closeModal nulls pendingAction
+  const type   = pendingAction.type;
+  const xid    = pendingAction.xid;
+  const btnEl  = pendingAction.btnEl;
   if (actionsInFlight.has(xid)) return;
   actionsInFlight.add(xid);
+
   const confirmBtn = document.getElementById('modal-confirm-btn');
   confirmBtn.disabled = true;
   confirmBtn.style.pointerEvents = 'none';
   confirmBtn.innerHTML = '<span class="spinner"></span> Sending...';
 
-  // Update row button to sending state — use stored element ref, not getElementById (avoids dupe ID issue in bulk)
-  const rowBtn = pendingAction.btnEl;
-  if (rowBtn) rowBtn.outerHTML = `<span class="btn-sending" id="action-btn-${xid}"><span class="spinner spinner-dark" style="width:10px;height:10px;border-top-color:var(--ink3);"></span> Sending...</span>`;
+  // Close modal right away — frees up pendingAction for next action
+  closeModal();
+
+  // Mark row as sending using the stored element reference
+  if (btnEl) btnEl.outerHTML = `<span class="btn-sending" id="action-btn-${xid}"><span class="spinner spinner-dark" style="width:10px;height:10px;border-top-color:var(--ink3);"></span> Sending...</span>`;
 
   const endpoint = type === 'btf'
     ? `${API}/api/trigger-btf/${encodeURIComponent(xid)}`
@@ -630,31 +641,24 @@ async function confirmAction() {
     ? `${API}/api/trigger-usb/${encodeURIComponent(xid)}`
     : `${API}/api/send-to-po/${encodeURIComponent(xid)}`;
 
+  const btnClass = type === 'btf' ? 'btn-btf' : type === 'usb' ? 'btn-usb' : 'btn-po';
+  const btnLabel = type === 'btf' ? '⚡ Retry' : type === 'usb' ? '📡 Retry' : '📤 Retry';
+
   try {
     const resp = await fetch(endpoint, { method: 'POST' });
     const data = await resp.json();
-    closeModal(); // also resets actionInFlight
-
     const btn = document.getElementById(`action-btn-${xid}`);
-    const btnClass = type === 'btf' ? 'btn-btf' : type === 'usb' ? 'btn-usb' : 'btn-po';
-    const btnLabel = type === 'btf' ? '⚡ Retry' : type === 'usb' ? '📡 Retry' : '📤 Retry';
-
     if (data.status === 'ok') {
       const label = type === 'btf' ? 'BTF trigger' : type === 'usb' ? 'USB trigger' : 'Send to PO';
-      // Clear the spinning row button to ✅ Sent
       if (btn) btn.outerHTML = `<span class="btn-sent-ok">✅ Sent</span>`;
       showToast(`✅ ${label} sent for ${xid}`, 'ok');
       showRefreshBar();
     } else {
-      // Restore button to retry state
       if (btn) btn.outerHTML = `<button class="${btnClass}" id="action-btn-${xid}" onclick="openModal('${type}','${xid}','',this)">${btnLabel}</button>`;
       showToast(`❌ OTM returned HTTP ${data.httpStatus}`, 'err');
     }
   } catch (err) {
-    closeModal(); // also resets actionInFlight
     const btn = document.getElementById(`action-btn-${xid}`);
-    const btnClass = type === 'btf' ? 'btn-btf' : type === 'usb' ? 'btn-usb' : 'btn-po';
-    const btnLabel = type === 'btf' ? '⚡ Retry' : type === 'usb' ? '📡 Retry' : '📤 Retry';
     if (btn) btn.outerHTML = `<button class="${btnClass}" id="action-btn-${xid}" onclick="openModal('${type}','${xid}','',this)">${btnLabel}</button>`;
     showToast(`❌ Error: ${err.message}`, 'err');
   } finally {
@@ -731,7 +735,7 @@ function renderBulkResults(data) {
         }
         const btfElig  = isFP ? stCell(st.BTF_SHIP_IND?.value)     : `<td><span class="st st-null">—</span></td>`;
         const btfPrice = isFP ? stCell(st.BTF_RATE_IND?.value)     : `<td><span class="st st-null">—</span></td>`;
-        const usbSt    = isFP ? stCell(st.SENT_TO_USB?.value) : `<td><span class="st st-null">—</span></td>`;
+        const usbSt    = isFP ? stCell(st.SEND_SHIPMENT_USB?.value) : `<td><span class="st st-null">—</span></td>`;
         const fpSt     = fpStatusCell(isFP, s.attribute10);
         const action   = actionCell(s);
         return `<tr class="${rowCls}">
