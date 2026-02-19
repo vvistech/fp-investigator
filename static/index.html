@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FreightPay Investigator</title>
+<title>LEAP — FP Exceptions Console</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Figtree:wght@300;400;500;600&display=swap');
 
@@ -218,13 +218,12 @@ tbody tr.row-fp{background:#fafffe;}
 <!-- SIDEBAR -->
 <nav class="sidebar">
   <div class="sb-logo">
-    <div class="sb-logo-mark">Freight<span>Pay</span></div>
-    <div class="sb-logo-sub">Investigator</div>
+    <div class="sb-logo-mark">LEA<span>P</span></div>
+    <div class="sb-logo-sub">FP Exceptions Console</div>
   </div>
   <div class="sb-section">
-    <div class="sb-section-label">Investigate</div>
-    <div class="sb-item active" onclick="nav('home')" id="nav-home"><span class="sb-icon">⌂</span> Home</div>
-    <div class="sb-item" onclick="nav('search')" id="nav-search"><span class="sb-icon">⌕</span> Search</div>
+    <div class="sb-section-label">FP Exceptions Console</div>
+    <div class="sb-item active" onclick="nav('search')" id="nav-search"><span class="sb-icon">⌕</span> FP Shipment Review</div>
   </div>
   <div class="sb-bottom">
     <div class="sb-user">
@@ -240,7 +239,7 @@ tbody tr.row-fp{background:#fafffe;}
 <!-- MAIN -->
 <div class="main">
   <div class="topbar">
-    <div class="topbar-title" id="topbar-title">Home</div>
+    <div class="topbar-title" id="topbar-title">FP Shipment Review</div>
     <div class="topbar-actions">
       <div class="api-status checking" id="api-status">
         <span class="spinner spinner-dark" style="width:9px;height:9px;border-top-color:var(--amber);"></span>
@@ -249,41 +248,8 @@ tbody tr.row-fp{background:#fafffe;}
     </div>
   </div>
 
-  <!-- HOME -->
-  <div class="page active" id="page-home">
-    <div class="home-hero">
-      <h2>FreightPay Investigator</h2>
-      <p>Search OTM live. View BTF, USB and FP statuses inline. Trigger BTF pricing or Send to PO directly from the results.</p>
-      <div class="home-quick">
-        <div class="hq-card" onclick="nav('search')">
-          <div class="hq-icon">🔍</div>
-          <div class="hq-title">Search Shipments</div>
-          <div class="hq-desc">Search by shipment name, XID, order or SAP reference.</div>
-        </div>
-        <div class="hq-card" onclick="nav('search')">
-          <div class="hq-icon">⚡</div>
-          <div class="hq-title">Trigger BTF</div>
-          <div class="hq-desc">FP + TL + BTF Elig = Y + NOT_PROCESSED. Posts REPROCESS to OTM WMServlet.</div>
-        </div>
-        <div class="hq-card" onclick="nav('search')">
-          <div class="hq-icon">📤</div>
-          <div class="hq-title">Send to PO</div>
-          <div class="hq-desc">TOC shipments where attributeNumber1 is null or = 2. Creates FP shipment via OTM PO workflow.</div>
-        </div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-header"><span>ℹ</span><span class="card-title">Actions Guide</span></div>
-      <div class="card-body" style="font-size:12px;color:var(--ink3);line-height:1.9;">
-        <p><strong style="color:var(--purple);">⚡ Trigger BTF</strong> — FP rows only · Mode = TL · BTF Eligibility = Y · BTF Pricing = NOT_PROCESSED</p>
-        <p style="margin-top:5px;"><strong style="color:var(--orange);">📤 Send to PO</strong> — TOC rows only · attributeNumber1 is null or = 2 · Creates FP shipment via OTM PO workflow</p>
-        <p style="margin-top:5px;"><strong style="color:var(--ink);">FP Status</strong> — Attribute10. If null → <strong style="color:var(--green);">Processed</strong>. If populated → shown in red (payment blocked)</p>
-      </div>
-    </div>
-  </div>
-
   <!-- SEARCH -->
-  <div class="page" id="page-search">
+  <div class="page active" id="page-search">
     <div class="page-head">
       <h1>Search</h1>
       <p>Enter one value or multiple comma-separated values. Results are grouped per value when searching in bulk.</p>
@@ -397,7 +363,7 @@ function nav(page) {
   document.getElementById('page-' + page).classList.add('active');
   const ni = document.getElementById('nav-' + page);
   if (ni) ni.classList.add('active');
-  document.getElementById('topbar-title').textContent = {home:'Home',search:'Search'}[page] || page;
+  document.getElementById('topbar-title').textContent = {search:'FP Shipment Review'}[page] || page;
 }
 
 // ── UNIFIED SEARCH ──
