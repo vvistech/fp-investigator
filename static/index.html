@@ -359,7 +359,7 @@ tbody tr.row-fp{background:#fafffe;}
 <script>
 const API = '';
 let pendingAction = null; // { type: 'btf'|'po'|'usb', xid, carrier }
-let actionInFlight = false; // prevent double-submit
+const actionsInFlight = new Set(); // per-xid lock to prevent double-submit on same row
 
 // ── NAV ──
 function nav(page) {
@@ -598,7 +598,6 @@ function openModal(type, xid, carrier) {
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
   pendingAction = null;
-  actionInFlight = false;
 }
 
 function handleOverlayClick(e) {
@@ -606,9 +605,10 @@ function handleOverlayClick(e) {
 }
 
 async function confirmAction() {
-  if (!pendingAction || actionInFlight) return;
-  actionInFlight = true;
+  if (!pendingAction) return;
   const { type, xid } = pendingAction;
+  if (actionsInFlight.has(xid)) return;
+  actionsInFlight.add(xid);
   const confirmBtn = document.getElementById('modal-confirm-btn');
   confirmBtn.disabled = true;
   confirmBtn.style.pointerEvents = 'none';
@@ -627,28 +627,32 @@ async function confirmAction() {
   try {
     const resp = await fetch(endpoint, { method: 'POST' });
     const data = await resp.json();
-    closeModal();
+    closeModal(); // also resets actionInFlight
+
+    const btn = document.getElementById(`action-btn-${xid}`);
+    const btnClass = type === 'btf' ? 'btn-btf' : type === 'usb' ? 'btn-usb' : 'btn-po';
+    const btnLabel = type === 'btf' ? '⚡ Retry' : type === 'usb' ? '📡 Retry' : '📤 Retry';
 
     if (data.status === 'ok') {
       const label = type === 'btf' ? 'BTF trigger' : type === 'usb' ? 'USB trigger' : 'Send to PO';
+      // Clear the spinning row button to ✅ Sent
+      if (btn) btn.outerHTML = `<span class="btn-sent-ok">✅ Sent</span>`;
       showToast(`✅ ${label} sent for ${xid}`, 'ok');
       showRefreshBar();
     } else {
-      const btn = document.getElementById(`action-btn-${xid}`);
-      const btnClass = type === 'btf' ? 'btn-btf' : type === 'usb' ? 'btn-usb' : 'btn-po';
-      const btnLabel = type === 'btf' ? '⚡ Retry' : type === 'usb' ? '📡 Retry' : '📤 Retry';
+      // Restore button to retry state
       if (btn) btn.outerHTML = `<button class="${btnClass}" id="action-btn-${xid}" onclick="openModal('${type}','${xid}','')">${btnLabel}</button>`;
       showToast(`❌ OTM returned HTTP ${data.httpStatus}`, 'err');
     }
   } catch (err) {
-    closeModal();
+    closeModal(); // also resets actionInFlight
     const btn = document.getElementById(`action-btn-${xid}`);
     const btnClass = type === 'btf' ? 'btn-btf' : type === 'usb' ? 'btn-usb' : 'btn-po';
     const btnLabel = type === 'btf' ? '⚡ Retry' : type === 'usb' ? '📡 Retry' : '📤 Retry';
     if (btn) btn.outerHTML = `<button class="${btnClass}" id="action-btn-${xid}" onclick="openModal('${type}','${xid}','')">${btnLabel}</button>`;
     showToast(`❌ Error: ${err.message}`, 'err');
   } finally {
-    actionInFlight = false;
+    actionsInFlight.delete(xid);
   }
 }
 
