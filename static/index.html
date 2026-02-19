@@ -468,16 +468,22 @@ function actionCell(s) {
     const btfPrice  = (st.BTF_RATE_IND?.value        || '').toUpperCase();
     const usbStatus = (st.SEND_SHIPMENT_USB?.value   || '').toUpperCase();
 
-    // BTF Trigger — TL + BTF Elig Y + NOT_PROCESSED
-    if (isTL && btfElig === 'Y' && btfPrice === 'NOT_PROCESSED') {
+    // BTF Trigger — TL + BTF Elig Y + NOT_PROCESSED or REPROCESS
+    if (isTL && btfElig === 'Y' && (btfPrice === 'NOT_PROCESSED' || btfPrice === 'REPROCESS')) {
       return `<td><button class="btn-btf" id="action-btn-${xid}" onclick="openModal('btf','${xid}','${carrier}')">⚡ Trigger BTF</button></td>`;
     }
-    // USB Trigger — SEND_SHIPMENT_USB = N (workflow inserted it) + FP Status blank
-    if (usbStatus === 'N' && !fpBlocked) {
+    // USB Trigger — BTF REPROCESS + SEND_SHIPMENT_USB = N + FP Status blank
+    if (btfPrice === 'REPROCESS' && usbStatus === 'N' && !fpBlocked) {
       return `<td><button class="btn-usb" id="action-btn-${xid}" onclick="openModal('usb','${xid}','${carrier}')">📡 Trigger USB</button></td>`;
     }
     if (btfPrice === 'PRICED') {
       return `<td><span class="st st-ok" style="font-size:10px;">✓ Priced</span></td>`;
+    }
+    if (btfPrice === 'ERROR') {
+      return `<td><span class="st st-err" style="font-size:10px;">⚠ Error</span></td>`;
+    }
+    if (btfPrice === 'HOLD') {
+      return `<td><span class="st st-warn" style="font-size:10px;">⏸ Hold</span></td>`;
     }
     return `<td><span class="st st-null">—</span></td>`;
   } else {
