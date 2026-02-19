@@ -356,6 +356,25 @@ tbody tr.row-fp{background:#fafffe;}
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
+<!-- BTF ERROR MODAL -->
+<div class="overlay" id="btf-error-overlay" onclick="if(event.target===this)closeBtfError()" style="z-index:110;">
+  <div class="modal" style="width:480px;">
+    <div class="modal-header">
+      <div class="modal-icon" style="background:#fee2e2;">⚠️</div>
+      <div>
+        <div class="modal-title">BTF Pricing Error</div>
+        <div class="modal-sub" id="btf-error-xid">—</div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:12px 14px;font-size:12px;color:#b91c1c;line-height:1.6;word-break:break-word;" id="btf-error-text">—</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeBtfError()">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const API = '';
 let pendingAction = null; // { type: 'btf'|'po'|'usb', xid, carrier }
@@ -435,13 +454,19 @@ async function doSearch() {
 }
 
 // ── CELL HELPERS ──
-function stCell(value) {
+function stCell(value, errorMsg, xid) {
   if (!value) return `<td><span class="st st-null">—</span></td>`;
   const v = value.toUpperCase();
   let cls = 'st-null';
   if (['Y','PRICED','PROCESSED','SENT'].includes(v)) cls = 'st-ok';
   else if (['N','NOT_PROCESSED','REPROCESS'].includes(v)) cls = 'st-warn';
   else if (['ERROR','HOLD'].includes(v)) cls = 'st-err';
+  // If ERROR and we have an error message, make it clickable
+  if (v === 'ERROR' && errorMsg && xid) {
+    const safeMsg = errorMsg.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    const safeXid = xid.replace(/'/g, "\\'");
+    return `<td><span class="st ${cls}" style="cursor:pointer;text-decoration:underline dotted;" title="Click to see error details" onclick="openBtfError('${safeXid}','${safeMsg}')">⚠ ERROR</span></td>`;
+  }
   return `<td><span class="st ${cls}">${value}</span></td>`;
 }
 
@@ -484,7 +509,9 @@ function actionCell(s) {
       return `<td><span class="st st-ok" style="font-size:10px;">✓ Priced</span></td>`;
     }
     if (btfPrice === 'ERROR') {
-      return `<td><span class="st st-err" style="font-size:10px;">⚠ Error</span></td>`;
+      const safeMsg = (s.btfErrorMessage || 'No error details available.').replace(/'/g, "\\'");
+      const safeXid = xid.replace(/'/g, "\\'");
+      return `<td><span class="st st-err" style="font-size:10px;cursor:pointer;text-decoration:underline dotted;" onclick="openBtfError('${safeXid}','${safeMsg}')">⚠ Error</span></td>`;
     }
     if (btfPrice === 'HOLD') {
       return `<td><span class="st st-warn" style="font-size:10px;">⏸ Hold</span></td>`;
@@ -531,7 +558,7 @@ function renderResults(data) {
     }
 
     const btfElig  = isFP ? stCell(st.BTF_SHIP_IND?.value)     : `<td><span class="st st-null">—</span></td>`;
-    const btfPrice = isFP ? stCell(st.BTF_RATE_IND?.value)     : `<td><span class="st st-null">—</span></td>`;
+    const btfPrice = isFP ? stCell(st.BTF_RATE_IND?.value, s.btfErrorMessage, s.shipmentXid)     : `<td><span class="st st-null">—</span></td>`;
     const usbSt    = isFP ? stCell(st.SENT_TO_USB?.value) : `<td><span class="st st-null">—</span></td>`;
     const fpSt     = fpStatusCell(isFP, s.attribute10);
     const action   = actionCell(s);
@@ -614,6 +641,16 @@ function openModal(type, xid, carrier, btnEl) {
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
   pendingAction = null;
+}
+
+function openBtfError(xid, message) {
+  document.getElementById('btf-error-xid').textContent = xid;
+  document.getElementById('btf-error-text').textContent = message || 'No error details available.';
+  document.getElementById('btf-error-overlay').classList.add('open');
+}
+
+function closeBtfError() {
+  document.getElementById('btf-error-overlay').classList.remove('open');
 }
 
 function handleOverlayClick(e) {
@@ -739,7 +776,7 @@ function renderBulkResults(data) {
           srcChip = `<span class="chip ${dc}">${s.dataSource}</span>`;
         }
         const btfElig  = isFP ? stCell(st.BTF_SHIP_IND?.value)     : `<td><span class="st st-null">—</span></td>`;
-        const btfPrice = isFP ? stCell(st.BTF_RATE_IND?.value)     : `<td><span class="st st-null">—</span></td>`;
+        const btfPrice = isFP ? stCell(st.BTF_RATE_IND?.value, s.btfErrorMessage, s.shipmentXid)     : `<td><span class="st st-null">—</span></td>`;
         const usbSt    = isFP ? stCell(st.SENT_TO_USB?.value) : `<td><span class="st st-null">—</span></td>`;
         const fpSt     = fpStatusCell(isFP, s.attribute10);
         const action   = actionCell(s);

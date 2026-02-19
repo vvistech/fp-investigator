@@ -34,7 +34,7 @@ SEARCH_FIELDS = (
     "startTime,endTime,"
     "totalWeight,totalVolume,totalActualCost,"
     "attribute10,attributeNumber1,"
-    "statuses,refnums"
+    "statuses,refnums,remarks"
 )
 
 DETAIL_FIELDS = (
@@ -47,7 +47,7 @@ DETAIL_FIELDS = (
     "shipmentAsWork,"
     "attribute10,attributeNumber1,"
     "insertDate,updateDate,"
-    "statuses,refnums"
+    "statuses,refnums,remarks"
 )
 
 # All queries run for every search
@@ -80,7 +80,7 @@ def build_search_url(query_name: str, param_value: str) -> str:
         f"{OTM_BASE}/logisticsRestApi/resources-int/v2"
         f"/custom-actions/savedQueries/shipments"
         f"/{OTM_DOMAIN}/{query_name}"
-        f"?fields={SEARCH_FIELDS}&expand=statuses,refnums&parameterValue={param_value}"
+        f"?fields={SEARCH_FIELDS}&expand=statuses,refnums,remarks&parameterValue={param_value}"
     )
 
 def extract_xid_from_link(links: list, rel: str = "canonical") -> Optional[str]:
@@ -123,6 +123,16 @@ def parse_inline_statuses(raw_statuses: dict) -> dict:
             }
     return result
 
+def parse_remarks(raw_remarks: dict) -> Optional[str]:
+    """Extract BTF_ERROR_MESSAGE remark text if present."""
+    for item in (raw_remarks or {}).get("items", []):
+        qual = item.get("remarkQualGid", "")
+        if "." in qual:
+            qual = qual.split(".", 1)[1]
+        if qual.upper() == "BTF_ERROR_MESSAGE":
+            return item.get("remarkText")
+    return None
+
 def parse_refnums(raw_refnums: dict) -> dict:
     result = {"dataSource": None, "orderNumber": None}
     for item in (raw_refnums or {}).get("items", []):
@@ -152,6 +162,7 @@ def parse_shipment(raw: dict) -> dict:
     refnums     = parse_refnums(raw.get("refnums", {}))
     data_source = refnums["dataSource"]
     order_number = refnums["orderNumber"]
+    btf_error   = parse_remarks(raw.get("remarks", {}))
     is_fp       = raw.get("shipmentAsWork", False) or "SEND_SHIPMENT_USB" in statuses
 
     return {
@@ -177,6 +188,7 @@ def parse_shipment(raw: dict) -> dict:
         "attributeNumber1": raw.get("attributeNumber1"),
         "dataSource":       data_source,
         "orderNumber":      order_number,
+        "btfErrorMessage":  btf_error,
         "statuses":         statuses,
     }
 
