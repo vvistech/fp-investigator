@@ -71,6 +71,14 @@ html,body{height:100%;font-family:'Figtree',sans-serif;background:var(--bg);colo
 .btn-po{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:'Figtree',sans-serif;background:linear-gradient(135deg,#ea580c,#c2410c);color:#fff;transition:all .15s;box-shadow:0 1px 4px rgba(234,88,12,0.3);white-space:nowrap;}
 .btn-po:hover{background:linear-gradient(135deg,#c2410c,#9a3412);transform:translateY(-1px);}
 
+/* USB TRIGGER BUTTON */
+.btn-usb{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:'Figtree',sans-serif;background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;transition:all .15s;box-shadow:0 1px 4px rgba(13,148,136,0.3);white-space:nowrap;}
+.btn-usb:hover{background:linear-gradient(135deg,#0f766e,#115e59);transform:translateY(-1px);}
+.modal-icon-usb{background:var(--teal-lt);}
+.modal-warning-usb{background:var(--teal-lt);border:1px solid #5eead4;color:#134e4a;}
+.btn-confirm-usb{background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;padding:7px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:'Figtree',sans-serif;display:flex;align-items:center;gap:6px;}
+.btn-confirm-usb:hover{background:linear-gradient(135deg,#0f766e,#115e59);}
+
 /* SENT STATES */
 .btn-sent-ok{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;background:var(--green-lt);color:var(--green);border:1px solid #86efac;white-space:nowrap;}
 .btn-sending{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;background:var(--surface2);color:var(--ink3);border:1px solid var(--border);white-space:nowrap;}
@@ -469,8 +477,8 @@ function fpStatusCell(isFP, attr10) {
   if (!isFP) return `<td><span class="st st-null">—</span></td>`;
   const isEmpty = attr10 === null || attr10 === undefined || attr10 === '';
   return isEmpty
-    ? `<td><span class="st st-processed">Processed</span></td>`
-    : `<td><span class="st st-err">${attr10}</span></td>`;
+    ? `<td><span class="st st-null">—</span></td>`
+    : `<td><span class="st st-err" title="${attr10}">${attr10}</span></td>`;
 }
 
 // ── ACTION CELL ──
@@ -577,6 +585,19 @@ function openModal(type, xid, carrier) {
     const btn = document.getElementById('modal-confirm-btn');
     btn.className   = 'btn-confirm-btf';
     btn.textContent = '⚡ Confirm & Send';
+  } else if (type === 'usb') {
+    document.getElementById('modal-icon').className      = 'modal-icon modal-icon-usb';
+    document.getElementById('modal-icon').textContent    = '📡';
+    document.getElementById('modal-title').textContent   = 'Trigger USB';
+    document.getElementById('modal-sub').textContent     = 'Send SEND_SHIPMENT_USB - R to OTM WMServlet';
+    document.getElementById('modal-extra-lbl').textContent = 'Status Value';
+    document.getElementById('modal-extra-val').textContent = 'SEND_SHIPMENT_USB - R';
+    document.getElementById('modal-extra-val').style.color = 'var(--teal)';
+    document.getElementById('modal-warning').className   = 'modal-warning modal-warning-usb';
+    document.getElementById('modal-warning-text').textContent = 'This will POST an XML message to OTM to trigger USB transmission. SEND_SHIPMENT_USB will be set to R.';
+    const btn = document.getElementById('modal-confirm-btn');
+    btn.className   = 'btn-confirm-usb';
+    btn.textContent = '📡 Confirm & Send';
   } else {
     document.getElementById('modal-icon').className      = 'modal-icon modal-icon-po';
     document.getElementById('modal-icon').textContent    = '📤';
@@ -617,6 +638,8 @@ async function confirmAction() {
 
   const endpoint = type === 'btf'
     ? `${API}/api/trigger-btf/${encodeURIComponent(xid)}`
+    : type === 'usb'
+    ? `${API}/api/trigger-usb/${encodeURIComponent(xid)}`
     : `${API}/api/send-to-po/${encodeURIComponent(xid)}`;
 
   try {
@@ -625,21 +648,21 @@ async function confirmAction() {
     closeModal();
 
     if (data.status === 'ok') {
-      const label = type === 'btf' ? 'BTF trigger' : 'Send to PO';
+      const label = type === 'btf' ? 'BTF trigger' : type === 'usb' ? 'USB trigger' : 'Send to PO';
       showToast(`✅ ${label} sent for ${xid} — refreshing...`, 'ok');
       await doSearch();
     } else {
       const btn = document.getElementById(`action-btn-${xid}`);
-      const btnClass = type === 'btf' ? 'btn-btf' : 'btn-po';
-      const btnLabel = type === 'btf' ? '⚡ Retry' : '📤 Retry';
+      const btnClass = type === 'btf' ? 'btn-btf' : type === 'usb' ? 'btn-usb' : 'btn-po';
+      const btnLabel = type === 'btf' ? '⚡ Retry' : type === 'usb' ? '📡 Retry' : '📤 Retry';
       if (btn) btn.outerHTML = `<button class="${btnClass}" id="action-btn-${xid}" onclick="openModal('${type}','${xid}','')">${btnLabel}</button>`;
       showToast(`❌ OTM returned HTTP ${data.httpStatus}`, 'err');
     }
   } catch (err) {
     closeModal();
     const btn = document.getElementById(`action-btn-${xid}`);
-    const btnClass = type === 'btf' ? 'btn-btf' : 'btn-po';
-    const btnLabel = type === 'btf' ? '⚡ Retry' : '📤 Retry';
+    const btnClass = type === 'btf' ? 'btn-btf' : type === 'usb' ? 'btn-usb' : 'btn-po';
+    const btnLabel = type === 'btf' ? '⚡ Retry' : type === 'usb' ? '📡 Retry' : '📤 Retry';
     if (btn) btn.outerHTML = `<button class="${btnClass}" id="action-btn-${xid}" onclick="openModal('${type}','${xid}','')">${btnLabel}</button>`;
     showToast(`❌ Error: ${err.message}`, 'err');
   }

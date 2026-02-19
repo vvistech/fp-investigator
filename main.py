@@ -221,6 +221,38 @@ def build_btf_payload(shipment_xid: str) -> str:
     </otm:TransmissionBody>
 </otm:Transmission>"""
 
+def build_usb_payload(shipment_xid: str) -> str:
+    return f"""<?xml version="1.0" encoding="UTF-8"?>
+<otm:Transmission xmlns:otm="http://xmlns.oracle.com/apps/otm/transmission/v6.4" xmlns:gtm="http://xmlns.oracle.com/apps/gtm/transmission/v6.4">
+    <otm:TransmissionHeader/>
+    <otm:TransmissionBody>
+        <otm:GLogXMLElement>
+            <otm:GenericStatusUpdate>
+                <otm:GenericStatusObjectType>SHIPMENT</otm:GenericStatusObjectType>
+                <otm:Gid>
+                    <otm:DomainName>KRAFT/KFNA</otm:DomainName>
+                    <otm:Xid>{shipment_xid}</otm:Xid>
+                </otm:Gid>
+                <otm:TransactionCode>IU</otm:TransactionCode>
+                <otm:Status>
+                    <otm:StatusTypeGid>
+                        <otm:Gid>
+                            <otm:DomainName>KRAFT/KFNA</otm:DomainName>
+                            <otm:Xid>SEND_SHIPMENT_USB</otm:Xid>
+                        </otm:Gid>
+                    </otm:StatusTypeGid>
+                    <otm:StatusValueGid>
+                        <otm:Gid>
+                            <otm:DomainName>KRAFT/KFNA</otm:DomainName>
+                            <otm:Xid>SEND_SHIPMENT_USB - R</otm:Xid>
+                        </otm:Gid>
+                    </otm:StatusValueGid>
+                </otm:Status>
+            </otm:GenericStatusUpdate>
+        </otm:GLogXMLElement>
+    </otm:TransmissionBody>
+</otm:Transmission>"""
+
 def build_send_to_po_payload(shipment_xid: str) -> str:
     return f"""<?xml version="1.0" encoding="UTF-8"?>
 <otm:Transmission xmlns:otm="http://xmlns.oracle.com/apps/otm/transmission/v6.4" xmlns:gtm="http://xmlns.oracle.com/apps/gtm/transmission/v6.4">
@@ -342,6 +374,29 @@ async def bulk_search(
 async def trigger_btf(shipment_xid: str):
     """POST XML to OTM WMServlet to trigger BTF pricing reprocess."""
     payload = build_btf_payload(shipment_xid)
+    try:
+        async with httpx.AsyncClient(verify=False) as client:
+            resp = await client.post(
+                OTM_WMSERVLET,
+                content=payload.encode("utf-8"),
+                headers={"Content-Type": "application/xml"},
+                auth=(OTM_USER, OTM_PASS),
+                timeout=30,
+            )
+        return {
+            "status":      "ok" if resp.status_code < 400 else "error",
+            "httpStatus":  resp.status_code,
+            "shipmentXid": shipment_xid,
+            "response":    resp.text[:500],
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/trigger-usb/{shipment_xid}")
+async def trigger_usb(shipment_xid: str):
+    """POST XML to OTM WMServlet to trigger USB transmission."""
+    payload = build_usb_payload(shipment_xid)
     try:
         async with httpx.AsyncClient(verify=False) as client:
             resp = await client.post(
