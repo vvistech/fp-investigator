@@ -217,7 +217,6 @@ tbody tr.row-fp{background:#fafffe;}
     <div class="sb-section-label">Investigate</div>
     <div class="sb-item active" onclick="nav('home')" id="nav-home"><span class="sb-icon">⌂</span> Home</div>
     <div class="sb-item" onclick="nav('search')" id="nav-search"><span class="sb-icon">⌕</span> Search</div>
-    <div class="sb-item" onclick="nav('bulk')" id="nav-bulk"><span class="sb-icon">⊞</span> Bulk Search</div>
   </div>
   <div class="sb-bottom">
     <div class="sb-user">
@@ -258,10 +257,10 @@ tbody tr.row-fp{background:#fafffe;}
           <div class="hq-title">Trigger BTF</div>
           <div class="hq-desc">FP + TL + BTF Elig = Y + NOT_PROCESSED. Posts REPROCESS to OTM WMServlet.</div>
         </div>
-        <div class="hq-card" onclick="nav('bulk')">
-          <div class="hq-icon">⊞</div>
-          <div class="hq-title">Bulk Search</div>
-          <div class="hq-desc">Paste comma-separated shipment names or order numbers. All run in parallel, results grouped per value.</div>
+        <div class="hq-card" onclick="nav('search')">
+          <div class="hq-icon">📤</div>
+          <div class="hq-title">Send to PO</div>
+          <div class="hq-desc">TOC shipments where attributeNumber1 is null or = 2. Creates FP shipment via OTM PO workflow.</div>
         </div>
       </div>
     </div>
@@ -279,21 +278,23 @@ tbody tr.row-fp{background:#fafffe;}
   <div class="page" id="page-search">
     <div class="page-head">
       <h1>Search</h1>
-      <p>Search by shipment name, XID, order number or SAP reference.</p>
+      <p>Enter one value or multiple comma-separated values. Results are grouped per value when searching in bulk.</p>
     </div>
     <div class="search-bar">
-      <div style="display:flex;gap:8px;align-items:center;">
+      <div style="display:flex;gap:8px;align-items:flex-start;">
         <div style="flex:1;">
-          <div class="input-group">
-            <span class="input-icon">⌕</span>
-            <input class="input" id="search-input" placeholder="e.g. 2100416780 or 920347449"
-              onkeydown="if(event.key==='Enter')doSearch()">
+          <textarea class="input" id="search-input" rows="2"
+            style="resize:vertical;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;"
+            placeholder="e.g. 3563932506  or  3563932506, 3563926053, 3563889852"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();doSearch();}"></textarea>
+          <div style="margin-top:5px;font-size:10px;color:var(--ink4);" id="search-hint">
+            Press Enter to search · Separate multiple values with commas
           </div>
         </div>
-        <button class="btn btn-primary" id="search-btn" onclick="doSearch()">Search OTM</button>
-      </div>
-      <div style="margin-top:8px;font-size:10px;color:var(--ink4);">
-        Search by shipment name, XID, order number or SAP reference
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <button class="btn btn-primary" id="search-btn" onclick="doSearch()">Search OTM</button>
+          <button class="btn" style="background:var(--surface2);color:var(--ink3);border:1px solid var(--border2);font-size:11px;" onclick="clearSearch()">Clear</button>
+        </div>
       </div>
     </div>
 
@@ -301,12 +302,15 @@ tbody tr.row-fp{background:#fafffe;}
     <div class="state-box" id="search-empty">
       <div class="icon">⌕</div>
       <h3>Enter a value to search</h3>
-      <p>Type a shipment name, order number or SAP reference above</p>
+      <p>Single value or comma-separated list — the tool handles both automatically</p>
     </div>
     <div class="state-box" id="search-loading" style="display:none;">
       <div class="spinner spinner-dark" style="width:26px;height:26px;margin:0 auto 10px;"></div>
-      <h3>Querying OTM...</h3><p>Running 6 saved queries in parallel</p>
+      <h3 id="search-loading-text">Querying OTM...</h3>
+      <p id="search-loading-sub">Fetching results</p>
     </div>
+
+    <!-- SINGLE RESULT (one value) -->
     <div id="search-results" style="display:none;">
       <div class="result-meta" id="result-meta"></div>
       <div class="card" style="margin-bottom:0;">
@@ -314,23 +318,11 @@ tbody tr.row-fp{background:#fafffe;}
           <table>
             <thead>
               <tr>
-                <th>Shipment ID</th>
-                <th>Name</th>
-                <th>Src</th>
-                <th>Mode</th>
-                <th>Carrier</th>
-                <th>Origin</th>
-                <th>Dest</th>
-                <th>Start</th>
-                <th>Weight</th>
-                <th>Cost (USD)</th>
-                <th>Type</th>
-                <th class="status-col">BTF Elig</th>
-                <th class="status-col">BTF Pricing</th>
-                <th class="status-col">USB Elig</th>
-                <th class="status-col">USB Status</th>
-                <th class="fp-col">FP Status</th>
-                <th class="action-col">Actions</th>
+                <th>Shipment ID</th><th>Name</th><th>Src</th><th>Mode</th><th>Carrier</th>
+                <th>Origin</th><th>Dest</th><th>Start</th><th>Weight</th><th>Cost (USD)</th><th>Type</th>
+                <th class="status-col">BTF Elig</th><th class="status-col">BTF Pricing</th>
+                <th class="status-col">USB Elig</th><th class="status-col">USB Status</th>
+                <th class="fp-col">FP Status</th><th class="action-col">Actions</th>
               </tr>
             </thead>
             <tbody id="results-body"></tbody>
@@ -338,47 +330,8 @@ tbody tr.row-fp{background:#fafffe;}
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- BULK SEARCH PAGE -->
-  <div class="page" id="page-bulk">
-    <div class="page-head">
-      <h1>Bulk Search</h1>
-      <p>Paste comma-separated shipment names or order numbers. Results are grouped per value.</p>
-    </div>
-
-    <div class="search-bar">
-      <div style="display:flex;gap:8px;align-items:flex-start;">
-        <div style="flex:1;">
-          <textarea class="input" id="bulk-input" rows="3"
-            style="resize:vertical;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;"
-            placeholder="e.g. 3563932506, 3563926053, 3563889852"></textarea>
-          <div style="margin-top:5px;font-size:10px;color:var(--ink4);">
-            Separate values with <strong>commas</strong>. Max <strong>100</strong> values per request.
-          </div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:6px;">
-          <button class="btn btn-primary" id="bulk-btn" onclick="doBulkSearch()">⊞ Search All</button>
-          <button class="btn" style="background:var(--surface2);color:var(--ink3);border:1px solid var(--border2);" onclick="clearBulk()">Clear</button>
-        </div>
-      </div>
-      <!-- VALUE PILLS -->
-      <div id="bulk-pills" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;"></div>
-    </div>
-
-    <div id="bulk-error" class="error-banner" style="display:none;"><span>⚠</span><div id="bulk-error-text"></div></div>
-
-    <div class="state-box" id="bulk-empty">
-      <div class="icon">⊞</div>
-      <h3>Paste values above to search in bulk</h3>
-      <p>Results will be grouped by each input value</p>
-    </div>
-    <div class="state-box" id="bulk-loading" style="display:none;">
-      <div class="spinner spinner-dark" style="width:26px;height:26px;margin:0 auto 10px;"></div>
-      <h3 id="bulk-loading-text">Querying OTM...</h3>
-      <p>Running 6 saved queries per value in parallel</p>
-    </div>
-
+    <!-- BULK RESULTS (multiple values) -->
     <div id="bulk-results" style="display:none;"></div>
   </div>
 
@@ -436,30 +389,68 @@ function nav(page) {
   document.getElementById('page-' + page).classList.add('active');
   const ni = document.getElementById('nav-' + page);
   if (ni) ni.classList.add('active');
-  document.getElementById('topbar-title').textContent = {home:'Home',search:'Search',bulk:'Bulk Search'}[page] || page;
+  document.getElementById('topbar-title').textContent = {home:'Home',search:'Search'}[page] || page;
 }
 
-// ── SEARCH ──
+// ── UNIFIED SEARCH ──
+function clearSearch() {
+  document.getElementById('search-input').value = '';
+  document.getElementById('search-results').style.display = 'none';
+  document.getElementById('bulk-results').style.display = 'none';
+  document.getElementById('bulk-results').innerHTML = '';
+  document.getElementById('search-empty').style.display = 'block';
+  document.getElementById('search-error').style.display = 'none';
+}
+
 async function doSearch() {
-  const q = document.getElementById('search-input').value.trim();
-  if (!q) { alert('Please enter a search value.'); return; }
+  const raw = document.getElementById('search-input').value.trim();
+  if (!raw) { alert('Please enter a search value.'); return; }
+
+  const vals = [...new Set(raw.split(',').map(v => v.trim()).filter(Boolean))];
+  const isBulk = vals.length > 1;
+
+  // Reset state
   document.getElementById('search-empty').style.display = 'none';
   document.getElementById('search-results').style.display = 'none';
+  document.getElementById('bulk-results').style.display = 'none';
+  document.getElementById('bulk-results').innerHTML = '';
   document.getElementById('search-error').style.display = 'none';
   document.getElementById('search-loading').style.display = 'block';
+  document.getElementById('search-loading-text').textContent = isBulk
+    ? `Querying OTM for ${vals.length} values...`
+    : 'Querying OTM...';
+  document.getElementById('search-loading-sub').textContent = isBulk
+    ? 'Results will be grouped per value'
+    : 'Fetching results';
+
   const btn = document.getElementById('search-btn');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Searching...';
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Searching...';
+
   try {
-    const resp = await fetch(`${API}/api/search?q=${encodeURIComponent(q)}`);
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data.detail || `HTTP ${resp.status}`);
-    renderResults(data);
+    if (isBulk) {
+      if (vals.length > 100) throw new Error('Maximum 100 values per request.');
+      const resp = await fetch(`${API}/api/bulk-search`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: vals.join(',')
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.detail || `HTTP ${resp.status}`);
+      renderBulkResults(data);
+    } else {
+      const resp = await fetch(`${API}/api/search?q=${encodeURIComponent(vals[0])}`);
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.detail || `HTTP ${resp.status}`);
+      renderResults(data);
+    }
   } catch (err) {
     document.getElementById('search-error-text').textContent = `Error: ${err.message}`;
     document.getElementById('search-error').style.display = 'flex';
   } finally {
     document.getElementById('search-loading').style.display = 'none';
-    btn.disabled = false; btn.innerHTML = 'Search OTM';
+    btn.disabled = false;
+    btn.innerHTML = 'Search OTM';
   }
 }
 
@@ -663,66 +654,7 @@ function showToast(msg, type) {
   setTimeout(() => t.classList.remove('show'), 4000);
 }
 
-// ── BULK SEARCH ──
-function parseBulkValues() {
-  const raw = document.getElementById('bulk-input').value;
-  return [...new Set(raw.split(',').map(v => v.trim()).filter(Boolean))];
-}
-
-function renderBulkPills() {
-  const vals = parseBulkValues();
-  const container = document.getElementById('bulk-pills');
-  container.innerHTML = vals.length
-    ? vals.map(v => `<span style="display:inline-flex;align-items:center;gap:5px;background:var(--blue-lt);border:1px solid #93c5fd;color:var(--blue);font-size:10px;font-family:'JetBrains Mono',monospace;padding:2px 8px;border-radius:4px;">${v}</span>`).join('')
-    : '';
-}
-
-document.getElementById('bulk-input').addEventListener('input', renderBulkPills);
-
-function clearBulk() {
-  document.getElementById('bulk-input').value = '';
-  document.getElementById('bulk-pills').innerHTML = '';
-  document.getElementById('bulk-results').style.display = 'none';
-  document.getElementById('bulk-results').innerHTML = '';
-  document.getElementById('bulk-empty').style.display = 'block';
-  document.getElementById('bulk-error').style.display = 'none';
-}
-
-async function doBulkSearch() {
-  const vals = parseBulkValues();
-  if (!vals.length) { alert('Please enter at least one value.'); return; }
-  if (vals.length > 100) { alert('Maximum 100 values per request.'); return; }
-
-  document.getElementById('bulk-empty').style.display = 'none';
-  document.getElementById('bulk-results').style.display = 'none';
-  document.getElementById('bulk-results').innerHTML = '';
-  document.getElementById('bulk-error').style.display = 'none';
-  document.getElementById('bulk-loading').style.display = 'block';
-  document.getElementById('bulk-loading-text').textContent = `Querying OTM for ${vals.length} value${vals.length > 1 ? 's' : ''}...`;
-
-  const btn = document.getElementById('bulk-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Searching...';
-
-  try {
-    const resp = await fetch(`${API}/api/bulk-search`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: vals.join(',')
-    });
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data.detail || `HTTP ${resp.status}`);
-    renderBulkResults(data);
-  } catch (err) {
-    document.getElementById('bulk-error-text').textContent = `Error: ${err.message}`;
-    document.getElementById('bulk-error').style.display = 'flex';
-  } finally {
-    document.getElementById('bulk-loading').style.display = 'none';
-    btn.disabled = false;
-    btn.innerHTML = '⊞ Search All';
-  }
-}
-
+// ── BULK RENDER ──
 function renderBulkResults(data) {
   const container = document.getElementById('bulk-results');
   container.style.display = 'block';
