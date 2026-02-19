@@ -625,10 +625,9 @@ async function confirmAction() {
     closeModal();
 
     if (data.status === 'ok') {
-      const btn = document.getElementById(`action-btn-${xid}`);
-      if (btn) btn.outerHTML = `<span class="btn-sent-ok">✅ Sent</span>`;
       const label = type === 'btf' ? 'BTF trigger' : 'Send to PO';
-      showToast(`✅ ${label} sent for ${xid}`, 'ok');
+      showToast(`✅ ${label} sent for ${xid} — refreshing...`, 'ok');
+      await doSearch();
     } else {
       const btn = document.getElementById(`action-btn-${xid}`);
       const btnClass = type === 'btf' ? 'btn-btf' : 'btn-po';
