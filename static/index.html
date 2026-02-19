@@ -532,7 +532,7 @@ function renderResults(data) {
 
     const btfElig  = isFP ? stCell(st.BTF_SHIP_IND?.value)     : `<td><span class="st st-null">—</span></td>`;
     const btfPrice = isFP ? stCell(st.BTF_RATE_IND?.value)     : `<td><span class="st st-null">—</span></td>`;
-    const usbSt    = isFP ? stCell(st.SEND_SHIPMENT_USB?.value) : `<td><span class="st st-null">—</span></td>`;
+    const usbSt    = isFP ? stCell(st.SENT_TO_USB?.value) : `<td><span class="st st-null">—</span></td>`;
     const fpSt     = fpStatusCell(isFP, s.attribute10);
     const action   = actionCell(s);
 
@@ -739,7 +739,7 @@ function renderBulkResults(data) {
         }
         const btfElig  = isFP ? stCell(st.BTF_SHIP_IND?.value)     : `<td><span class="st st-null">—</span></td>`;
         const btfPrice = isFP ? stCell(st.BTF_RATE_IND?.value)     : `<td><span class="st st-null">—</span></td>`;
-        const usbSt    = isFP ? stCell(st.SEND_SHIPMENT_USB?.value) : `<td><span class="st st-null">—</span></td>`;
+        const usbSt    = isFP ? stCell(st.SENT_TO_USB?.value) : `<td><span class="st st-null">—</span></td>`;
         const fpSt     = fpStatusCell(isFP, s.attribute10);
         const action   = actionCell(s);
         return `<tr class="${rowCls}">
