@@ -1,7 +1,7 @@
 import os
 import httpx
 import asyncio
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import FastAPI, Query, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -280,13 +280,13 @@ async def fetch_query(client: httpx.AsyncClient, url: str, query_name: str) -> d
 
 # ── ROUTES ──────────────────────────────────────────────
 
-@app.get("/api/search")
-async def search(q: str = Query(..., description="Search value")):
+async def search_single(client: httpx.AsyncClient, q: str) -> dict:
+    """Run all OTM queries for a single search value and return grouped result."""
+    q = q.strip()
     urls = [build_search_url(qn, q) for qn in ALL_QUERIES]
-    async with httpx.AsyncClient(verify=False) as client:
-        results = await asyncio.gather(
-            *[fetch_query(client, url, qn) for url, qn in zip(urls, ALL_QUERIES)]
-        )
+    results = await asyncio.gather(
+        *[fetch_query(client, url, qn) for url, qn in zip(urls, ALL_QUERIES)]
+    )
     seen = set()
     merged = []
     for result in results:
@@ -301,6 +301,40 @@ async def search(q: str = Query(..., description="Search value")):
         "queries":     [{"name": r["query"], "count": r["count"], "error": r["error"]} for r in results],
         "errors":      [r["error"] for r in results if r["error"]],
         "items":       merged,
+    }
+
+
+@app.get("/api/search")
+async def search(q: str = Query(..., description="Search value")):
+    async with httpx.AsyncClient(verify=False) as client:
+        return await search_single(client, q)
+
+
+@app.post("/api/bulk-search")
+async def bulk_search(
+    values: str = Body(..., media_type="text/plain", description="Comma-separated search values"),
+):
+    """
+    Accept a comma-separated list of search values.
+    Runs all OTM queries for each value in parallel.
+    Returns results grouped by each input value.
+    """
+    raw_values = [v.strip() for v in values.split(",") if v.strip()]
+    if not raw_values:
+        raise HTTPException(status_code=400, detail="No search values provided.")
+    if len(raw_values) > 100:
+        raise HTTPException(status_code=400, detail="Maximum 100 values per bulk request.")
+
+    async with httpx.AsyncClient(verify=False) as client:
+        group_results = await asyncio.gather(
+            *[search_single(client, q) for q in raw_values]
+        )
+
+    total_shipments = sum(r["totalCount"] for r in group_results)
+    return {
+        "totalValues":    len(raw_values),
+        "totalShipments": total_shipments,
+        "results":        list(group_results),
     }
 
 
