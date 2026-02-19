@@ -186,6 +186,22 @@ tbody tr.row-fp{background:#fafffe;}
 
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+/* BULK RESULTS */
+.bulk-group{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px;}
+.bulk-group-header{padding:10px 16px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;}
+.bulk-group-header:hover{background:#eef0f5;}
+.bulk-group-xid{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--blue);}
+.bulk-group-count{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;}
+.bulk-group-count.found{background:var(--green-lt);color:var(--green);}
+.bulk-group-count.none{background:var(--surface2);color:var(--ink4);border:1px solid var(--border);}
+.bulk-group-count.error{background:var(--red-lt);color:var(--red);}
+.bulk-group-toggle{margin-left:auto;font-size:12px;color:var(--ink4);transition:transform .2s;}
+.bulk-group.collapsed .bulk-group-toggle{transform:rotate(-90deg);}
+.bulk-group.collapsed .bulk-group-body{display:none;}
+.bulk-group-body{overflow-x:auto;}
+.bulk-summary-bar{display:flex;align-items:center;gap:14px;padding:10px 16px;background:#f8f9fb;border-bottom:1px solid var(--border);font-size:11px;color:var(--ink3);}
+.bulk-summary-bar strong{color:var(--ink);font-weight:700;}
 </style>
 </head>
 <body>
@@ -201,6 +217,7 @@ tbody tr.row-fp{background:#fafffe;}
     <div class="sb-section-label">Investigate</div>
     <div class="sb-item active" onclick="nav('home')" id="nav-home"><span class="sb-icon">⌂</span> Home</div>
     <div class="sb-item" onclick="nav('search')" id="nav-search"><span class="sb-icon">⌕</span> Search</div>
+    <div class="sb-item" onclick="nav('bulk')" id="nav-bulk"><span class="sb-icon">⊞</span> Bulk Search</div>
   </div>
   <div class="sb-bottom">
     <div class="sb-user">
@@ -241,10 +258,10 @@ tbody tr.row-fp{background:#fafffe;}
           <div class="hq-title">Trigger BTF</div>
           <div class="hq-desc">FP + TL + BTF Elig = Y + NOT_PROCESSED. Posts REPROCESS to OTM WMServlet.</div>
         </div>
-        <div class="hq-card" onclick="nav('search')">
-          <div class="hq-icon">📤</div>
-          <div class="hq-title">Send to PO</div>
-          <div class="hq-desc">TOC shipments where attributeNumber1 is null or 2. Creates FP shipment via OTM workflow.</div>
+        <div class="hq-card" onclick="nav('bulk')">
+          <div class="hq-icon">⊞</div>
+          <div class="hq-title">Bulk Search</div>
+          <div class="hq-desc">Paste comma-separated shipment names or order numbers. All run in parallel, results grouped per value.</div>
         </div>
       </div>
     </div>
@@ -323,6 +340,48 @@ tbody tr.row-fp{background:#fafffe;}
     </div>
   </div>
 
+  <!-- BULK SEARCH PAGE -->
+  <div class="page" id="page-bulk">
+    <div class="page-head">
+      <h1>Bulk Search</h1>
+      <p>Paste comma-separated shipment names or order numbers. All 6 queries run in parallel per value.</p>
+    </div>
+
+    <div class="search-bar">
+      <div style="display:flex;gap:8px;align-items:flex-start;">
+        <div style="flex:1;">
+          <textarea class="input" id="bulk-input" rows="3"
+            style="resize:vertical;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;"
+            placeholder="e.g. 3563932506, 3563926053, 3563889852"></textarea>
+          <div style="margin-top:5px;font-size:10px;color:var(--ink4);">
+            Separate values with <strong>commas</strong>. Max <strong>100</strong> values per request.
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <button class="btn btn-primary" id="bulk-btn" onclick="doBulkSearch()">⊞ Search All</button>
+          <button class="btn" style="background:var(--surface2);color:var(--ink3);border:1px solid var(--border2);" onclick="clearBulk()">Clear</button>
+        </div>
+      </div>
+      <!-- VALUE PILLS -->
+      <div id="bulk-pills" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;"></div>
+    </div>
+
+    <div id="bulk-error" class="error-banner" style="display:none;"><span>⚠</span><div id="bulk-error-text"></div></div>
+
+    <div class="state-box" id="bulk-empty">
+      <div class="icon">⊞</div>
+      <h3>Paste values above to search in bulk</h3>
+      <p>Results will be grouped by each input value</p>
+    </div>
+    <div class="state-box" id="bulk-loading" style="display:none;">
+      <div class="spinner spinner-dark" style="width:26px;height:26px;margin:0 auto 10px;"></div>
+      <h3 id="bulk-loading-text">Querying OTM...</h3>
+      <p>Running 6 saved queries per value in parallel</p>
+    </div>
+
+    <div id="bulk-results" style="display:none;"></div>
+  </div>
+
 </div>
 </div>
 
@@ -377,7 +436,7 @@ function nav(page) {
   document.getElementById('page-' + page).classList.add('active');
   const ni = document.getElementById('nav-' + page);
   if (ni) ni.classList.add('active');
-  document.getElementById('topbar-title').textContent = {home:'Home',search:'Search'}[page] || page;
+  document.getElementById('topbar-title').textContent = {home:'Home',search:'Search',bulk:'Bulk Search'}[page] || page;
 }
 
 // ── SEARCH ──
@@ -607,6 +666,172 @@ function showToast(msg, type) {
   t.textContent = msg;
   t.className = `toast toast-${type} show`;
   setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+// ── BULK SEARCH ──
+function parseBulkValues() {
+  const raw = document.getElementById('bulk-input').value;
+  return [...new Set(raw.split(',').map(v => v.trim()).filter(Boolean))];
+}
+
+function renderBulkPills() {
+  const vals = parseBulkValues();
+  const container = document.getElementById('bulk-pills');
+  container.innerHTML = vals.length
+    ? vals.map(v => `<span style="display:inline-flex;align-items:center;gap:5px;background:var(--blue-lt);border:1px solid #93c5fd;color:var(--blue);font-size:10px;font-family:'JetBrains Mono',monospace;padding:2px 8px;border-radius:4px;">${v}</span>`).join('')
+    : '';
+}
+
+document.getElementById('bulk-input').addEventListener('input', renderBulkPills);
+
+function clearBulk() {
+  document.getElementById('bulk-input').value = '';
+  document.getElementById('bulk-pills').innerHTML = '';
+  document.getElementById('bulk-results').style.display = 'none';
+  document.getElementById('bulk-results').innerHTML = '';
+  document.getElementById('bulk-empty').style.display = 'block';
+  document.getElementById('bulk-error').style.display = 'none';
+}
+
+async function doBulkSearch() {
+  const vals = parseBulkValues();
+  if (!vals.length) { alert('Please enter at least one value.'); return; }
+  if (vals.length > 100) { alert('Maximum 100 values per request.'); return; }
+
+  document.getElementById('bulk-empty').style.display = 'none';
+  document.getElementById('bulk-results').style.display = 'none';
+  document.getElementById('bulk-results').innerHTML = '';
+  document.getElementById('bulk-error').style.display = 'none';
+  document.getElementById('bulk-loading').style.display = 'block';
+  document.getElementById('bulk-loading-text').textContent = `Querying OTM for ${vals.length} value${vals.length > 1 ? 's' : ''}...`;
+
+  const btn = document.getElementById('bulk-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Searching...';
+
+  try {
+    const resp = await fetch(`${API}/api/bulk-search`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: vals.join(',')
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.detail || `HTTP ${resp.status}`);
+    renderBulkResults(data);
+  } catch (err) {
+    document.getElementById('bulk-error-text').textContent = `Error: ${err.message}`;
+    document.getElementById('bulk-error').style.display = 'flex';
+  } finally {
+    document.getElementById('bulk-loading').style.display = 'none';
+    btn.disabled = false;
+    btn.innerHTML = '⊞ Search All';
+  }
+}
+
+function renderBulkResults(data) {
+  const container = document.getElementById('bulk-results');
+  container.style.display = 'block';
+
+  // Summary bar
+  const found = data.results.filter(r => r.totalCount > 0).length;
+  const notFound = data.results.filter(r => r.totalCount === 0).length;
+  const errors = data.results.filter(r => r.errors && r.errors.length > 0).length;
+  let html = `
+    <div class="bulk-summary-bar">
+      <span>🔍 <strong>${data.totalValues}</strong> values searched</span>
+      <span>📦 <strong>${data.totalShipments}</strong> total shipments found</span>
+      <span style="color:var(--green);">✓ <strong>${found}</strong> with results</span>
+      ${notFound ? `<span style="color:var(--ink4);">○ <strong>${notFound}</strong> no results</span>` : ''}
+      ${errors  ? `<span style="color:var(--red);">⚠ <strong>${errors}</strong> errors</span>` : ''}
+    </div>`;
+
+  // One group per search value
+  data.results.forEach((group, idx) => {
+    const hasResults = group.totalCount > 0;
+    const hasError   = group.errors && group.errors.length > 0;
+    const countCls   = hasError ? 'error' : hasResults ? 'found' : 'none';
+    const countLbl   = hasError ? '⚠ Error' : hasResults ? `${group.totalCount} found` : 'No results';
+
+    // Query tags
+    const queryTags = (group.queries || []).map(q => {
+      const lbl = (q.name || '').split('.').pop();
+      const cls = q.count > 0 ? 'query-tag has-results' : 'query-tag';
+      return `<span class="${cls}">${lbl}: ${q.count}</span>`;
+    }).join('');
+
+    // Rows
+    let rowsHtml = '';
+    if (!hasResults) {
+      rowsHtml = `<tr><td colspan="17" style="text-align:center;padding:20px;color:var(--ink4);font-size:12px;">
+        ${hasError ? `⚠ ${group.errors[0]}` : 'No shipments found for this value.'}</td></tr>`;
+    } else {
+      rowsHtml = group.items.map(s => {
+        const isFP = s.shipmentAsWork;
+        const startDate = s.startTime ? s.startTime.split('T')[0] : '—';
+        const weight = s.totalWeight != null ? `${Number(s.totalWeight).toLocaleString()} ${s.weightUnit||''}` : '—';
+        const cost = s.totalActualCost != null
+          ? `$${Number(s.totalActualCost).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}` : '—';
+        const typeChip = isFP ? `<span class="chip chip-teal">FP</span>` : `<span class="chip chip-gray">TOC</span>`;
+        const rowCls = isFP ? 'row-fp' : '';
+        const st = s.statuses || {};
+        let srcChip = `<span class="st st-null">—</span>`;
+        if (s.dataSource) {
+          const dc = s.dataSource.toUpperCase().includes('SAP') ? 'chip-amber' : 'chip-blue';
+          srcChip = `<span class="chip ${dc}">${s.dataSource}</span>`;
+        }
+        const btfElig  = isFP ? stCell(st.BTF_SHIP_IND?.value)     : `<td><span class="st st-null">—</span></td>`;
+        const btfPrice = isFP ? stCell(st.BTF_RATE_IND?.value)     : `<td><span class="st st-null">—</span></td>`;
+        const usbElig  = isFP ? stCell(st.SEND_SHIPMENT_USB?.value) : `<td><span class="st st-null">—</span></td>`;
+        const usbSt    = isFP ? stCell(st.SENT_TO_USB?.value)      : `<td><span class="st st-null">—</span></td>`;
+        const fpSt     = fpStatusCell(isFP, s.attribute10);
+        const action   = actionCell(s);
+        return `<tr class="${rowCls}">
+          <td class="mono" style="color:var(--blue);font-weight:600;font-size:11px;">${s.shipmentXid||'—'}</td>
+          <td class="mono">${s.shipmentName||'—'}</td>
+          <td>${srcChip}</td>
+          <td><span class="chip chip-gray">${s.transportMode||'—'}</span></td>
+          <td style="font-weight:500;">${s.carrier||'—'}</td>
+          <td class="mono" style="font-size:10px;">${s.sourceLocation||'—'}</td>
+          <td class="mono" style="font-size:10px;">${s.destLocation||'—'}</td>
+          <td style="color:var(--ink3);">${startDate}</td>
+          <td>${weight}</td>
+          <td style="font-weight:600;">${cost}</td>
+          <td>${typeChip}</td>
+          ${btfElig}${btfPrice}${usbElig}${usbSt}${fpSt}${action}
+        </tr>`;
+      }).join('');
+    }
+
+    html += `
+      <div class="bulk-group" id="bulk-group-${idx}">
+        <div class="bulk-group-header" onclick="toggleBulkGroup(${idx})">
+          <span class="bulk-group-xid">${group.searchValue}</span>
+          <span class="bulk-group-count ${countCls}">${countLbl}</span>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-left:8px;">${queryTags}</div>
+          <span class="bulk-group-toggle">▼</span>
+        </div>
+        <div class="bulk-group-body">
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th>Shipment ID</th><th>Name</th><th>Src</th><th>Mode</th><th>Carrier</th>
+                <th>Origin</th><th>Dest</th><th>Start</th><th>Weight</th><th>Cost (USD)</th><th>Type</th>
+                <th class="status-col">BTF Elig</th><th class="status-col">BTF Pricing</th>
+                <th class="status-col">USB Elig</th><th class="status-col">USB Status</th>
+                <th class="fp-col">FP Status</th><th class="action-col">Actions</th>
+              </tr></thead>
+              <tbody>${rowsHtml}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+function toggleBulkGroup(idx) {
+  document.getElementById(`bulk-group-${idx}`).classList.toggle('collapsed');
 }
 
 // ── HEALTH CHECK ──
