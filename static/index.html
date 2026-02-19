@@ -296,7 +296,7 @@ tbody tr.row-fp{background:#fafffe;}
           <table>
             <thead>
               <tr>
-                <th>Shipment ID</th><th>Name</th><th>Type</th><th>Src</th><th>Mode</th><th>Carrier</th>
+                <th>Shipment ID</th><th>Name</th><th>Order No.</th><th>Type</th><th>Src</th><th>Mode</th><th>Carrier</th>
                 <th>Origin</th><th>Dest</th><th>Start</th><th>Weight</th><th>Cost (USD)</th>
                 <th class="status-col">BTF Elig</th><th class="status-col">BTF Pricing</th>
                 <th class="status-col">USB Status</th>
@@ -510,7 +510,7 @@ function renderResults(data) {
 
   const tbody = document.getElementById('results-body');
   if (!data.items || data.items.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="16" style="text-align:center;padding:28px;color:var(--ink4);">No shipments found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="17" style="text-align:center;padding:28px;color:var(--ink4);">No shipments found.</td></tr>`;
     return;
   }
 
@@ -540,6 +540,7 @@ function renderResults(data) {
       <tr class="${rowCls}">
         <td class="mono" style="color:var(--blue);font-weight:600;font-size:11px;">${s.shipmentXid||'—'}</td>
         <td class="mono">${s.shipmentName||'—'}</td>
+        <td class="mono" style="font-size:11px;">${s.orderNumber||'—'}</td>
         <td>${typeChip}</td>
         <td>${srcChip}</td>
         <td><span class="chip chip-gray">${s.transportMode||'—'}</span></td>
@@ -720,7 +721,7 @@ function renderBulkResults(data) {
     // Rows
     let rowsHtml = '';
     if (!hasResults) {
-      rowsHtml = `<tr><td colspan="16" style="text-align:center;padding:20px;color:var(--ink4);font-size:12px;">
+      rowsHtml = `<tr><td colspan="17" style="text-align:center;padding:20px;color:var(--ink4);font-size:12px;">
         ${hasError ? `⚠ ${group.errors[0]}` : 'No shipments found for this value.'}</td></tr>`;
     } else {
       rowsHtml = group.items.map(s => {
@@ -745,6 +746,7 @@ function renderBulkResults(data) {
         return `<tr class="${rowCls}">
           <td class="mono" style="color:var(--blue);font-weight:600;font-size:11px;">${s.shipmentXid||'—'}</td>
           <td class="mono">${s.shipmentName||'—'}</td>
+          <td class="mono" style="font-size:11px;">${s.orderNumber||'—'}</td>
           <td>${typeChip}</td>
           <td>${srcChip}</td>
           <td><span class="chip chip-gray">${s.transportMode||'—'}</span></td>
@@ -770,7 +772,7 @@ function renderBulkResults(data) {
           <div class="table-wrap">
             <table>
               <thead><tr>
-                <th>Shipment ID</th><th>Name</th><th>Type</th><th>Src</th><th>Mode</th><th>Carrier</th>
+                <th>Shipment ID</th><th>Name</th><th>Order No.</th><th>Type</th><th>Src</th><th>Mode</th><th>Carrier</th>
                 <th>Origin</th><th>Dest</th><th>Start</th><th>Weight</th><th>Cost (USD)</th>
                 <th class="status-col">BTF Elig</th><th class="status-col">BTF Pricing</th>
                 <th class="status-col">USB Status</th>

@@ -123,14 +123,18 @@ def parse_inline_statuses(raw_statuses: dict) -> dict:
             }
     return result
 
-def parse_refnums(raw_refnums: dict) -> Optional[str]:
+def parse_refnums(raw_refnums: dict) -> dict:
+    result = {"dataSource": None, "orderNumber": None}
     for item in (raw_refnums or {}).get("items", []):
         qualifier = item.get("shipmentRefnumQualGid", "")
         if "." in qualifier:
             qualifier = qualifier.split(".", 1)[1]
-        if qualifier.upper() == DATA_SOURCE_QUALIFIER:
-            return item.get("shipmentRefnumValue")
-    return None
+        q = qualifier.upper()
+        if q == DATA_SOURCE_QUALIFIER:
+            result["dataSource"] = item.get("shipmentRefnumValue")
+        elif q == "REFERENCE_NUMBER":
+            result["orderNumber"] = item.get("shipmentRefnumValue")
+    return result
 
 def parse_shipment(raw: dict) -> dict:
     src_links = raw.get("sourceLocation", {}).get("links", [])
@@ -145,7 +149,9 @@ def parse_shipment(raw: dict) -> dict:
     upd    = raw.get("updateDate",      {}) or {}
 
     statuses    = parse_inline_statuses(raw.get("statuses", {}))
-    data_source = parse_refnums(raw.get("refnums", {}))
+    refnums     = parse_refnums(raw.get("refnums", {}))
+    data_source = refnums["dataSource"]
+    order_number = refnums["orderNumber"]
     is_fp       = raw.get("shipmentAsWork", False) or "SEND_SHIPMENT_USB" in statuses
 
     return {
@@ -170,6 +176,7 @@ def parse_shipment(raw: dict) -> dict:
         "attribute10":      raw.get("attribute10"),
         "attributeNumber1": raw.get("attributeNumber1"),
         "dataSource":       data_source,
+        "orderNumber":      order_number,
         "statuses":         statuses,
     }
 
