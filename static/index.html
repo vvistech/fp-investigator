@@ -468,12 +468,16 @@ function actionCell(s) {
     const btfPrice  = (st.BTF_RATE_IND?.value        || '').toUpperCase();
     const usbStatus = (st.SEND_SHIPMENT_USB?.value   || '').toUpperCase();
 
-    // BTF Trigger — TL + BTF Elig Y + NOT_PROCESSED or REPROCESS
-    if (isTL && btfElig === 'Y' && (btfPrice === 'NOT_PROCESSED' || btfPrice === 'REPROCESS')) {
+    // BTF Trigger — TL + BTF Elig Y + NOT_PROCESSED (ready to trigger)
+    if (isTL && btfElig === 'Y' && btfPrice === 'NOT_PROCESSED') {
       return `<td><button class="btn-btf" id="action-btn-${xid}" onclick="openModal('btf','${xid}','${carrier}',this)">⚡ Trigger BTF</button></td>`;
     }
-    // USB Trigger — BTF REPROCESS + SEND_SHIPMENT_USB = N + FP Status blank
-    if (btfPrice === 'REPROCESS' && usbStatus === 'N' && !fpBlocked) {
+    // BTF Awaiting — TL + REPROCESS = waiting for OTM response, disable to prevent re-trigger
+    if (isTL && btfPrice === 'REPROCESS') {
+      return `<td><button class="btn-btf" disabled style="opacity:0.45;cursor:not-allowed;">⏳ Awaiting BTF...</button></td>`;
+    }
+    // USB Trigger — non-TL shipments skip BTF entirely, trigger USB when NOT_PROCESSED + USB=N + FP Status blank
+    if (!isTL && (btfPrice === 'NOT_PROCESSED' || btfPrice === 'REPROCESS') && usbStatus === 'N' && !fpBlocked) {
       return `<td><button class="btn-usb" id="action-btn-${xid}" onclick="openModal('usb','${xid}','${carrier}',this)">📡 Trigger USB</button></td>`;
     }
     if (btfPrice === 'PRICED') {
