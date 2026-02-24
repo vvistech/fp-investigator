@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LEAP — FP Exceptions Console</title>
+<title>LEAP — Logistics Execution and Acceleration Platform</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Figtree:wght@300;400;500;600&display=swap');
 
@@ -18,33 +18,36 @@
   --green:#16a34a; --green-lt:#dcfce7;
   --purple:#7c3aed; --purple-lt:#ede9fe;
   --orange:#ea580c; --orange-lt:#ffedd5;
-  --sidebar-w:210px;
+  --sidebar-w:220px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;font-family:'Figtree',sans-serif;background:var(--bg);color:var(--ink);font-size:13px;}
 .app{display:flex;height:100vh;overflow:hidden;}
 
-/* SIDEBAR */
+/* ── SIDEBAR ── */
 .sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;}
-.sb-logo{padding:18px 18px 14px;border-bottom:1px solid rgba(255,255,255,0.07);margin-bottom:6px;}
-.sb-logo-mark{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;}
+.sb-logo{padding:18px 18px 14px;border-bottom:1px solid rgba(255,255,255,0.07);margin-bottom:8px;}
+.sb-logo-mark{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;}
 .sb-logo-mark span{color:#38bdf8;}
-.sb-logo-sub{font-size:9px;color:rgba(255,255,255,0.3);letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
-.sb-section{padding:0 8px;margin-bottom:4px;}
-.sb-section-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.25);padding:8px 8px 4px;}
-.sb-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;color:rgba(255,255,255,0.55);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;margin-bottom:1px;}
+.sb-logo-sub{font-size:9px;color:rgba(255,255,255,0.3);letter-spacing:.5px;margin-top:3px;line-height:1.4;}
+.sb-section{padding:0 8px;margin-bottom:6px;}
+.sb-module-header{display:flex;align-items:center;gap:7px;padding:10px 10px 5px;}
+.sb-module-icon{font-size:12px;}
+.sb-module-label{font-size:9px;font-weight:700;letter-spacing:.5px;color:rgba(255,255,255,0.35);white-space:nowrap;}
+.sb-module-divider{flex:1;height:1px;background:rgba(255,255,255,0.08);margin-left:4px;}
+.sb-item{display:flex;align-items:center;gap:8px;padding:7px 10px 7px 24px;border-radius:7px;color:rgba(255,255,255,0.5);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;margin-bottom:1px;}
 .sb-item:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.85);}
 .sb-item.active{background:rgba(56,189,248,0.15);color:#38bdf8;}
-.sb-icon{font-size:14px;width:16px;text-align:center;}
+.sb-icon{font-size:13px;width:16px;text-align:center;}
 .sb-bottom{margin-top:auto;padding:10px 8px;border-top:1px solid rgba(255,255,255,0.07);}
-.sb-user{display:flex;align-items:center;gap:8px;}
-.sb-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#818cf8);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;}
-.sb-user-name{font-size:11px;font-weight:600;color:rgba(255,255,255,0.8);}
-.sb-user-role{font-size:9px;color:rgba(255,255,255,0.3);}
+.sb-settings{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;color:rgba(255,255,255,0.35);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;}
+.sb-settings:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.65);}
 
-/* MAIN */
+/* ── MAIN ── */
 .main{flex:1;overflow-y:auto;display:flex;flex-direction:column;min-width:0;}
-.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 22px;height:52px;display:flex;align-items:center;gap:14px;flex-shrink:0;position:sticky;top:0;z-index:10;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 22px;height:52px;display:flex;align-items:center;gap:8px;flex-shrink:0;position:sticky;top:0;z-index:10;}
+.topbar-module{font-size:11px;color:var(--ink4);font-weight:500;}
+.topbar-sep{color:var(--border2);font-size:13px;}
 .topbar-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;}
 .topbar-actions{margin-left:auto;display:flex;align-items:center;gap:8px;}
 .api-status{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;}
@@ -52,70 +55,70 @@ html,body{height:100%;font-family:'Figtree',sans-serif;background:var(--bg);colo
 .api-status.err{background:var(--red-lt);color:var(--red);}
 .api-status.checking{background:var(--amber-lt);color:var(--amber);}
 
-/* PAGES */
+/* ── PAGES ── */
 .page{padding:22px;flex:1;display:none;}
 .page.active{display:block;animation:fadeIn .2s ease;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
 
-/* BUTTONS */
+/* ── BUTTONS ── */
 .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:'Figtree',sans-serif;}
 .btn-primary{background:var(--blue);color:#fff;}
 .btn-primary:hover{background:#1e40af;}
 .btn-primary:disabled{background:var(--border2);color:var(--ink4);cursor:not-allowed;}
-
-/* BTF TRIGGER BUTTON */
 .btn-btf{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:'Figtree',sans-serif;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;transition:all .15s;box-shadow:0 1px 4px rgba(124,58,237,0.3);white-space:nowrap;}
 .btn-btf:hover{background:linear-gradient(135deg,#6d28d9,#5b21b6);transform:translateY(-1px);}
-
-/* SEND TO PO BUTTON */
 .btn-po{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:'Figtree',sans-serif;background:linear-gradient(135deg,#ea580c,#c2410c);color:#fff;transition:all .15s;box-shadow:0 1px 4px rgba(234,88,12,0.3);white-space:nowrap;}
 .btn-po:hover{background:linear-gradient(135deg,#c2410c,#9a3412);transform:translateY(-1px);}
-
-/* USB TRIGGER BUTTON */
 .btn-usb{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:'Figtree',sans-serif;background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;transition:all .15s;box-shadow:0 1px 4px rgba(13,148,136,0.3);white-space:nowrap;}
 .btn-usb:hover{background:linear-gradient(135deg,#0f766e,#115e59);transform:translateY(-1px);}
-.modal-icon-usb{background:var(--teal-lt);}
-.modal-warning-usb{background:var(--teal-lt);border:1px solid #5eead4;color:#134e4a;}
-.btn-confirm-usb{background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;padding:7px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:'Figtree',sans-serif;display:flex;align-items:center;gap:6px;}
-.btn-confirm-usb:hover{background:linear-gradient(135deg,#0f766e,#115e59);}
-
-/* SENT STATES */
 .btn-sent-ok{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;background:var(--green-lt);color:var(--green);border:1px solid #86efac;white-space:nowrap;}
 .btn-sending{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;background:var(--surface2);color:var(--ink3);border:1px solid var(--border);white-space:nowrap;}
 
-/* CARDS */
+/* ── CARDS ── */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px;}
 .card-header{padding:11px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
 .card-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;}
 .card-body{padding:14px 16px;}
 
-/* CHIPS */
+/* ── CHIPS ── */
 .chip{display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap;}
 .chip-teal{background:var(--teal-lt);color:var(--teal);}
 .chip-gray{background:var(--surface2);color:var(--ink3);border:1px solid var(--border);}
 .chip-blue{background:var(--blue-lt);color:var(--blue);}
 .chip-amber{background:var(--amber-lt);color:var(--amber);}
+.chip-red{background:var(--red-lt);color:var(--red);}
+.chip-green{background:var(--green-lt);color:var(--green);}
+.chip-purple{background:var(--purple-lt);color:var(--purple);}
+.chip-orange{background:var(--orange-lt);color:var(--orange);}
 
-/* COMPACT TABLE */
+/* ── TABLE ── */
 .table-wrap{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;table-layout:auto;}
-thead th{padding:8px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--ink3);background:var(--surface2);border-bottom:1px solid var(--border);white-space:nowrap;}
+thead th{padding:8px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--ink3);background:var(--surface2);border-bottom:1px solid var(--border);white-space:nowrap;}
 thead th.status-col{background:#f0f7ff;color:var(--blue);border-bottom:2px solid #93c5fd;}
 thead th.fp-col{background:#f0fdfb;color:var(--teal);border-bottom:2px solid #5eead4;}
 thead th.action-col{background:#faf5ff;color:var(--purple);border-bottom:2px solid #c4b5fd;}
+thead th.ums-col{background:#f0f7ff;color:var(--blue);border-bottom:2px solid #93c5fd;}
+thead th.otm-col{background:#f0fdfb;color:var(--teal);border-bottom:2px solid #5eead4;}
+thead th.diff-col{background:#faf5ff;color:var(--purple);border-bottom:2px solid #c4b5fd;}
 tbody td{padding:8px 10px;border-bottom:1px solid var(--border);font-size:11px;color:var(--ink2);vertical-align:middle;white-space:nowrap;}
 tbody tr:last-child td{border-bottom:none;}
 tbody tr.row-fp{background:#fafffe;}
+tbody tr.row-not-found{background:#fff8f8;}
+tbody tr.row-not-found td:first-child{border-left:3px solid var(--red);}
+tbody tr.row-mismatch{background:#fffdf0;}
+tbody tr.row-mismatch td:first-child{border-left:3px solid var(--amber);}
+tbody tr.row-matched{background:#f0fff4;}
+tbody tr.row-matched td:first-child{border-left:3px solid var(--green);}
 
-/* STATUS CELLS */
+/* ── STATUS CELLS ── */
 .st{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;}
 .st-ok{color:var(--green);}
 .st-warn{color:var(--amber);}
 .st-err{color:var(--red);}
 .st-null{color:var(--ink4);font-weight:400;}
-.st-processed{color:var(--green);font-weight:700;}
 
-/* FORM */
+/* ── FORM ── */
 .input{width:100%;padding:7px 11px;border-radius:7px;border:1px solid var(--border2);background:var(--surface);font-size:12px;font-family:'Figtree',sans-serif;color:var(--ink);outline:none;transition:border-color .15s,box-shadow .15s;}
 .input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(29,78,216,0.1);}
 .input-group{position:relative;}
@@ -123,15 +126,15 @@ tbody tr.row-fp{background:#fafffe;}
 .input-group .input{padding-left:30px;}
 .mono{font-family:'JetBrains Mono',monospace;font-size:11px;}
 
-/* PAGE HEADERS */
+/* ── PAGE HEADERS ── */
 .page-head{margin-bottom:18px;}
 .page-head h1{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:3px;}
 .page-head p{color:var(--ink3);font-size:12px;}
 
-/* SEARCH BAR */
+/* ── SEARCH BAR ── */
 .search-bar{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;}
 
-/* STATES */
+/* ── STATES ── */
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .spinner-dark{border-color:rgba(0,0,0,0.1);border-top-color:var(--blue);}
@@ -141,24 +144,12 @@ tbody tr.row-fp{background:#fafffe;}
 .state-box p{font-size:11px;}
 .error-banner{background:var(--red-lt);border:1px solid #fca5a5;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--red);display:flex;align-items:flex-start;gap:8px;}
 
-/* RESULT META */
+/* ── RESULT META ── */
 .result-meta{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
 .query-tag{font-size:10px;padding:2px 7px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);font-family:'JetBrains Mono',monospace;color:var(--ink3);}
 .query-tag.has-results{background:var(--blue-lt);border-color:#93c5fd;color:var(--blue);}
 
-/* HOME */
-.home-hero{background:linear-gradient(135deg,var(--navy) 0%,#1e3a5f 100%);border-radius:12px;padding:30px;margin-bottom:20px;position:relative;overflow:hidden;}
-.home-hero::before{content:'FP';position:absolute;right:28px;top:50%;transform:translateY(-50%);font-family:'Syne',sans-serif;font-size:120px;font-weight:800;color:rgba(255,255,255,0.04);line-height:1;pointer-events:none;}
-.home-hero h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:6px;}
-.home-hero p{color:rgba(255,255,255,0.55);font-size:12px;max-width:480px;line-height:1.6;}
-.home-quick{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:20px;}
-.hq-card{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;cursor:pointer;transition:all .2s;}
-.hq-card:hover{background:rgba(255,255,255,0.12);}
-.hq-icon{font-size:20px;margin-bottom:8px;}
-.hq-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff;margin-bottom:3px;}
-.hq-desc{font-size:11px;color:rgba(255,255,255,0.45);line-height:1.5;}
-
-/* MODAL */
+/* ── MODAL ── */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(3px);z-index:100;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
 .overlay.open{opacity:1;pointer-events:all;}
 .modal{background:#fff;border-radius:14px;width:440px;box-shadow:0 20px 60px rgba(0,0,0,0.2);transform:translateY(10px) scale(0.98);transition:transform .2s;overflow:hidden;}
@@ -167,6 +158,7 @@ tbody tr.row-fp{background:#fafffe;}
 .modal-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
 .modal-icon-btf{background:var(--purple-lt);}
 .modal-icon-po{background:var(--orange-lt);}
+.modal-icon-usb{background:var(--teal-lt);}
 .modal-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin-bottom:2px;}
 .modal-sub{font-size:11px;color:var(--ink3);}
 .modal-body{padding:18px 22px;}
@@ -178,6 +170,7 @@ tbody tr.row-fp{background:#fafffe;}
 .modal-warning{border-radius:7px;padding:10px 12px;font-size:11px;display:flex;gap:8px;align-items:flex-start;}
 .modal-warning-btf{background:var(--amber-lt);border:1px solid #fcd34d;color:#92400e;}
 .modal-warning-po{background:var(--orange-lt);border:1px solid #fdba74;color:#9a3412;}
+.modal-warning-usb{background:var(--teal-lt);border:1px solid #5eead4;color:#134e4a;}
 .modal-footer{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
 .btn-cancel{background:var(--surface2);color:var(--ink2);border:1px solid var(--border2);padding:7px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Figtree',sans-serif;}
 .btn-cancel:hover{background:var(--border);}
@@ -185,8 +178,10 @@ tbody tr.row-fp{background:#fafffe;}
 .btn-confirm-btf:hover{background:linear-gradient(135deg,#6d28d9,#5b21b6);}
 .btn-confirm-po{background:linear-gradient(135deg,#ea580c,#c2410c);color:#fff;padding:7px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:'Figtree',sans-serif;display:flex;align-items:center;gap:6px;}
 .btn-confirm-po:hover{background:linear-gradient(135deg,#c2410c,#9a3412);}
+.btn-confirm-usb{background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;padding:7px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:'Figtree',sans-serif;display:flex;align-items:center;gap:6px;}
+.btn-confirm-usb:hover{background:linear-gradient(135deg,#0f766e,#115e59);}
 
-/* TOAST */
+/* ── TOAST ── */
 .toast{position:fixed;bottom:24px;right:24px;padding:12px 18px;border-radius:10px;font-size:12px;font-weight:600;z-index:200;box-shadow:0 4px 20px rgba(0,0,0,0.15);transform:translateY(10px);opacity:0;transition:all .3s;pointer-events:none;}
 .toast.show{transform:translateY(0);opacity:1;}
 .toast-ok{background:var(--green-lt);color:var(--green);border:1px solid #86efac;}
@@ -195,7 +190,7 @@ tbody tr.row-fp{background:#fafffe;}
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
 
-/* BULK RESULTS */
+/* ── BULK RESULTS ── */
 .bulk-group{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px;}
 .bulk-group-header{padding:10px 16px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;}
 .bulk-group-header:hover{background:#eef0f5;}
@@ -210,36 +205,102 @@ tbody tr.row-fp{background:#fafffe;}
 .bulk-group-body{overflow-x:auto;}
 .bulk-summary-bar{display:flex;align-items:center;gap:14px;padding:10px 16px;background:#f8f9fb;border-bottom:1px solid var(--border);font-size:11px;color:var(--ink3);}
 .bulk-summary-bar strong{color:var(--ink);font-weight:700;}
+
+/* ── UMS RECONCILIATION ── */
+.upload-zone{background:var(--surface);border:2px dashed var(--border2);border-radius:12px;padding:24px 22px;margin-bottom:16px;display:flex;align-items:center;gap:20px;transition:border-color .2s,background .2s;cursor:pointer;}
+.upload-zone:hover{border-color:var(--blue);background:#f8faff;}
+.upload-zone.has-file{border-style:solid;border-color:#86efac;background:var(--green-lt);}
+.upload-icon{width:44px;height:44px;border-radius:10px;background:var(--blue-lt);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.upload-zone.has-file .upload-icon{background:var(--green-lt);}
+.upload-text h3{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:2px;}
+.upload-text p{font-size:11px;color:var(--ink3);}
+.upload-zone.has-file .upload-text h3{color:var(--green);}
+.upload-actions{margin-left:auto;flex-shrink:0;}
+.config-row{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.config-label{font-size:10px;font-weight:700;color:var(--ink3);letter-spacing:.5px;white-space:nowrap;}
+.toggle-group{display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:7px;overflow:hidden;}
+.toggle-opt{padding:5px 12px;font-size:11px;font-weight:600;color:var(--ink3);cursor:pointer;transition:all .15s;border:none;background:none;font-family:'Figtree',sans-serif;}
+.toggle-opt.active{background:var(--navy);color:#fff;}
+.config-divider{width:1px;height:26px;background:var(--border);flex-shrink:0;}
+.run-btn{margin-left:auto;display:inline-flex;align-items:center;gap:7px;padding:7px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:linear-gradient(135deg,#1d4ed8,#1e40af);color:#fff;font-family:'Figtree',sans-serif;transition:all .15s;box-shadow:0 2px 8px rgba(29,78,216,0.25);}
+.run-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(29,78,216,0.35);}
+.run-btn:disabled{background:var(--border2);color:var(--ink4);cursor:not-allowed;box-shadow:none;transform:none;}
+.progress-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:16px;display:none;}
+.progress-wrap.visible{display:block;}
+.progress-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.progress-label{font-size:12px;font-weight:600;}
+.progress-count{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink3);}
+.progress-bar-bg{height:5px;background:var(--surface2);border-radius:10px;overflow:hidden;}
+.progress-bar-fill{height:100%;background:linear-gradient(90deg,#1d4ed8,#38bdf8);border-radius:10px;transition:width .4s ease;}
+.progress-steps{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+.progress-step{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;}
+.progress-step.done{background:var(--green-lt);color:var(--green);}
+.progress-step.active{background:var(--blue-lt);color:var(--blue);}
+.progress-step.pending{background:var(--surface2);color:var(--ink4);}
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.sum-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 15px;display:flex;align-items:center;gap:11px;}
+.sum-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.sum-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;line-height:1;}
+.sum-lbl{font-size:10px;color:var(--ink3);margin-top:2px;}
+.sum-card.hl-red{border-color:#fca5a5;background:#fff8f8;}
+.sum-card.hl-amber{border-color:#fcd34d;background:#fffdf0;}
+.sum-card.hl-green{border-color:#86efac;background:#f0fff4;}
+.sum-card.hl-orange{border-color:#fdba74;background:#fff8f2;}
+.age-badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;}
+.age-critical{background:var(--red-lt);color:var(--red);}
+.age-warn{background:var(--amber-lt);color:var(--amber);}
+.age-ok{background:var(--green-lt);color:var(--green);}
+.expand-btn{background:none;border:none;cursor:pointer;color:var(--ink4);font-size:12px;padding:2px 5px;border-radius:4px;transition:all .15s;}
+.expand-btn:hover{background:var(--surface2);color:var(--ink);}
+.row-expanded-detail td{padding:0;background:#f8faff;border-bottom:2px solid var(--border2);}
+.expand-panel{padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.expand-section h4{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.expand-section h4.ums{color:var(--blue);}
+.expand-section h4.otm{color:var(--teal);}
+.expand-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.expand-field{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;}
+.expand-field.diff{border-color:#fcd34d;background:#fffdf0;}
+.expand-field-label{font-size:9px;letter-spacing:.5px;color:var(--ink4);margin-bottom:2px;}
+.expand-field-val{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;}
+.expand-field.diff .expand-field-val{color:var(--amber);}
+.btn-sm{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--ink2);font-family:'Figtree',sans-serif;transition:all .15s;}
+.btn-sm:hover{background:var(--surface2);}
+.btn-sm.primary{background:var(--blue);color:#fff;border-color:var(--blue);}
 </style>
 </head>
 <body>
 <div class="app">
 
-<!-- SIDEBAR -->
+<!-- ── SIDEBAR ── -->
 <nav class="sidebar">
   <div class="sb-logo">
     <div class="sb-logo-mark">LEA<span>P</span></div>
-    <div class="sb-logo-sub">FP Exceptions Console</div>
+    <div class="sb-logo-sub">Logistics Execution and Acceleration Platform</div>
   </div>
   <div class="sb-section">
-    <div class="sb-section-label">FP Exceptions Console</div>
-    <div class="sb-item active" onclick="nav('search')" id="nav-search"><span class="sb-icon">⌕</span> FP Shipment Review</div>
+    <div class="sb-module-header">
+      <span class="sb-module-icon">📦</span>
+      <span class="sb-module-label">FreightPay Console</span>
+      <div class="sb-module-divider"></div>
+    </div>
+    <div class="sb-item active" onclick="nav('search')" id="nav-search">
+      <span class="sb-icon">🔍</span> Shipment Lookup
+    </div>
+    <div class="sb-item" onclick="nav('ums')" id="nav-ums">
+      <span class="sb-icon">⚖️</span> UMS Reconciliation
+    </div>
   </div>
   <div class="sb-bottom">
-    <div class="sb-user">
-      <div class="sb-avatar">FP</div>
-      <div>
-        <div class="sb-user-name">KFNA.BULK_PLAN</div>
-        <div class="sb-user-role">OTM Service Account</div>
-      </div>
-    </div>
+    <div class="sb-settings"><span style="font-size:13px;">⚙️</span> Settings</div>
   </div>
 </nav>
 
-<!-- MAIN -->
+<!-- ── MAIN ── -->
 <div class="main">
   <div class="topbar">
-    <div class="topbar-title" id="topbar-title">FP Shipment Review</div>
+    <span class="topbar-module" id="topbar-module">FreightPay Console</span>
+    <span class="topbar-sep">›</span>
+    <div class="topbar-title" id="topbar-title">Shipment Lookup</div>
     <div class="topbar-actions">
       <div class="api-status checking" id="api-status">
         <span class="spinner spinner-dark" style="width:9px;height:9px;border-top-color:var(--amber);"></span>
@@ -248,10 +309,10 @@ tbody tr.row-fp{background:#fafffe;}
     </div>
   </div>
 
-  <!-- SEARCH -->
+  <!-- ── PAGE: SHIPMENT LOOKUP ── -->
   <div class="page active" id="page-search">
     <div class="page-head">
-      <h1>Search</h1>
+      <h1>Shipment Lookup</h1>
       <p>Enter one value or multiple comma-separated values. Results are grouped per value when searching in bulk.</p>
     </div>
     <div class="search-bar">
@@ -278,7 +339,7 @@ tbody tr.row-fp{background:#fafffe;}
     </div>
     <div id="search-error" class="error-banner" style="display:none;"><span>⚠</span><div id="search-error-text"></div></div>
     <div class="state-box" id="search-empty">
-      <div class="icon">⌕</div>
+      <div class="icon">🔍</div>
       <h3>Enter a value to search</h3>
       <p>Single value or comma-separated list — the tool handles both automatically</p>
     </div>
@@ -287,8 +348,6 @@ tbody tr.row-fp{background:#fafffe;}
       <h3 id="search-loading-text">Querying OTM...</h3>
       <p id="search-loading-sub">Fetching results</p>
     </div>
-
-    <!-- SINGLE RESULT (one value) -->
     <div id="search-results" style="display:none;">
       <div class="result-meta" id="result-meta"></div>
       <div class="card" style="margin-bottom:0;">
@@ -296,7 +355,7 @@ tbody tr.row-fp{background:#fafffe;}
           <table>
             <thead>
               <tr>
-                <th>Shipment ID</th><th>Name</th><th>Order No.</th><th>Type</th><th>Src</th><th>Mode</th><th>Carrier</th>
+                <th>Shipment Id</th><th>Name</th><th>Order No.</th><th>Type</th><th>Src</th><th>Mode</th><th>Carrier</th>
                 <th>Origin</th><th>Dest</th><th>Start</th><th>Weight</th><th>Cost (USD)</th>
                 <th class="status-col">BTF Elig</th><th class="status-col">BTF Pricing</th>
                 <th class="status-col">USB Status</th>
@@ -308,15 +367,132 @@ tbody tr.row-fp{background:#fafffe;}
         </div>
       </div>
     </div>
-
-    <!-- BULK RESULTS (multiple values) -->
     <div id="bulk-results" style="display:none;"></div>
   </div>
 
-</div>
-</div>
+  <!-- ── PAGE: UMS RECONCILIATION ── -->
+  <div class="page" id="page-ums">
+    <div class="page-head">
+      <h1>UMS Reconciliation</h1>
+      <p>Upload the weekly USB unmatched shipment sheet and cross-reference against OTM to surface discrepancies.</p>
+    </div>
 
-<!-- MODAL (shared for both BTF and Send to PO) -->
+    <!-- Upload zone -->
+    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('ums-file-input').click()">
+      <div class="upload-icon" id="upload-icon">📂</div>
+      <div class="upload-text">
+        <h3 id="upload-title">Drop UMS sheet here or click to upload</h3>
+        <p id="upload-sub">Accepts .xlsx or .csv · Columns A–AM expected</p>
+      </div>
+      <div class="upload-actions" id="upload-actions"></div>
+      <input type="file" id="ums-file-input" accept=".xlsx,.csv" style="display:none;" onchange="handleFileUpload(this)">
+    </div>
+
+    <!-- Config row -->
+    <div class="config-row">
+      <span class="config-label">Priority By</span>
+      <div class="toggle-group">
+        <button class="toggle-opt active" onclick="setToggle(this,'sort')">🔴 Age (Oldest First)</button>
+        <button class="toggle-opt" onclick="setToggle(this,'sort')">📅 Financial Status Date</button>
+        <button class="toggle-opt" onclick="setToggle(this,'sort')">✏️ Custom</button>
+      </div>
+      <div class="config-divider"></div>
+      <span class="config-label">Rows To Search</span>
+      <div class="toggle-group">
+        <button class="toggle-opt active" onclick="setToggle(this,'rows')">Top 10</button>
+        <button class="toggle-opt" onclick="setToggle(this,'rows')">Top 25</button>
+        <button class="toggle-opt" onclick="setToggle(this,'rows')">Top 50</button>
+        <button class="toggle-opt" onclick="setToggle(this,'rows')">All</button>
+      </div>
+      <div class="config-divider"></div>
+      <span class="config-label">Search Key</span>
+      <div class="toggle-group">
+        <button class="toggle-opt active" onclick="setToggle(this,'key')">Both (Order + PO)</button>
+        <button class="toggle-opt" onclick="setToggle(this,'key')">Order No. Only</button>
+        <button class="toggle-opt" onclick="setToggle(this,'key')">PO No. Only</button>
+      </div>
+      <button class="run-btn" id="run-recon-btn" onclick="runReconciliation()" disabled>▶ Run Reconciliation</button>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-wrap" id="ums-progress">
+      <div class="progress-header">
+        <span class="progress-label" id="ums-progress-label">🔄 Searching OTM...</span>
+        <span class="progress-count" id="ums-progress-count">0 / 0</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="ums-progress-fill" style="width:0%"></div>
+      </div>
+      <div class="progress-steps" id="ums-progress-steps"></div>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="summary-grid" id="ums-summary" style="display:none;">
+      <div class="sum-card hl-red">
+        <div class="sum-icon" style="background:var(--red-lt);">🔴</div>
+        <div><div class="sum-val" style="color:var(--red);" id="sum-not-found">—</div><div class="sum-lbl">Not Found in OTM</div></div>
+      </div>
+      <div class="sum-card hl-amber">
+        <div class="sum-icon" style="background:var(--amber-lt);">🟡</div>
+        <div><div class="sum-val" style="color:var(--amber);" id="sum-mismatch">—</div><div class="sum-lbl">Cost Mismatch</div></div>
+      </div>
+      <div class="sum-card hl-green">
+        <div class="sum-icon" style="background:var(--green-lt);">🟢</div>
+        <div><div class="sum-val" style="color:var(--green);" id="sum-matched">—</div><div class="sum-lbl">Matched Clean</div></div>
+      </div>
+      <div class="sum-card hl-orange">
+        <div class="sum-icon" style="background:var(--orange-lt);">⚠️</div>
+        <div><div class="sum-val" style="color:var(--orange);" id="sum-critical">—</div><div class="sum-lbl">Critical Aged (&gt;180 days)</div></div>
+      </div>
+    </div>
+
+    <!-- Results table -->
+    <div class="card" id="ums-results-card" style="display:none;">
+      <div class="card-header">
+        <span style="font-size:13px;">⚖️</span>
+        <span class="card-title" id="ums-results-title">Reconciliation Results</span>
+        <div style="margin-left:auto;display:flex;gap:8px;">
+          <button class="btn-sm primary" onclick="exportUmsResults()">⬇ Export Excel</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:28px;"></th>
+              <th>Age</th>
+              <th class="ums-col">Document No.</th>
+              <th class="ums-col">Order No.</th>
+              <th class="ums-col">PO Number</th>
+              <th class="ums-col">Billed Amt</th>
+              <th class="ums-col">Issue Date</th>
+              <th class="otm-col">OTM Match</th>
+              <th class="otm-col">OTM Shipment Id</th>
+              <th class="otm-col">OTM Cost</th>
+              <th class="diff-col">Cost Δ</th>
+              <th class="otm-col">BTF Status</th>
+              <th class="otm-col">FP Status</th>
+              <th class="action-col">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="ums-results-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div class="state-box" id="ums-empty">
+      <div class="icon">⚖️</div>
+      <h3>No file uploaded yet</h3>
+      <p>Upload the weekly UMS sheet to begin reconciliation</p>
+    </div>
+
+  </div><!-- end page-ums -->
+
+</div><!-- end main -->
+</div><!-- end app -->
+
+<!-- ── MODAL ── -->
 <div class="overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
   <div class="modal">
     <div class="modal-header">
@@ -329,7 +505,7 @@ tbody tr.row-fp{background:#fafffe;}
     <div class="modal-body">
       <div class="modal-detail">
         <div class="modal-row">
-          <span class="modal-lbl">Shipment ID</span>
+          <span class="modal-lbl">Shipment Id</span>
           <span class="modal-val" id="modal-xid">—</span>
         </div>
         <div class="modal-row">
@@ -353,9 +529,6 @@ tbody tr.row-fp{background:#fafffe;}
   </div>
 </div>
 
-<!-- TOAST -->
-<div class="toast" id="toast"></div>
-
 <!-- BTF ERROR MODAL -->
 <div class="overlay" id="btf-error-overlay" onclick="if(event.target===this)closeBtfError()" style="z-index:110;">
   <div class="modal" style="width:480px;">
@@ -375,22 +548,31 @@ tbody tr.row-fp{background:#fafffe;}
   </div>
 </div>
 
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
 <script>
 const API = '';
-let pendingAction = null; // { type: 'btf'|'po'|'usb', xid, carrier }
-const actionsInFlight = new Set(); // per-xid lock to prevent double-submit on same row
+let pendingAction = null;
+const actionsInFlight = new Set();
+let umsRows = []; // parsed UMS data
 
 // ── NAV ──
+const PAGE_TITLES = {
+  search: 'Shipment Lookup',
+  ums:    'UMS Reconciliation'
+};
+
 function nav(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
   const ni = document.getElementById('nav-' + page);
   if (ni) ni.classList.add('active');
-  document.getElementById('topbar-title').textContent = {search:'FP Shipment Review'}[page] || page;
+  document.getElementById('topbar-title').textContent = PAGE_TITLES[page] || page;
 }
 
-// ── UNIFIED SEARCH ──
+// ── SEARCH ──
 function clearSearch() {
   document.getElementById('search-input').value = '';
   document.getElementById('search-results').style.display = 'none';
@@ -407,7 +589,6 @@ async function doSearch() {
   const vals = [...new Set(raw.split(',').map(v => v.trim()).filter(Boolean))];
   const isBulk = vals.length > 1;
 
-  // Reset state
   hideRefreshBar();
   document.getElementById('search-empty').style.display = 'none';
   document.getElementById('search-results').style.display = 'none';
@@ -416,11 +597,9 @@ async function doSearch() {
   document.getElementById('search-error').style.display = 'none';
   document.getElementById('search-loading').style.display = 'block';
   document.getElementById('search-loading-text').textContent = isBulk
-    ? `Querying OTM for ${vals.length} values...`
-    : 'Querying OTM...';
+    ? `Querying OTM for ${vals.length} values...` : 'Querying OTM...';
   document.getElementById('search-loading-sub').textContent = isBulk
-    ? 'Results will be grouped per value'
-    : 'Fetching results';
+    ? 'Results will be grouped per value' : 'Fetching results';
 
   const btn = document.getElementById('search-btn');
   btn.disabled = true;
@@ -430,9 +609,7 @@ async function doSearch() {
     if (isBulk) {
       if (vals.length > 100) throw new Error('Maximum 100 values per request.');
       const resp = await fetch(`${API}/api/bulk-search`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: vals.join(',')
+        method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: vals.join(',')
       });
       const data = await resp.json();
       if (!resp.ok) throw new Error(data.detail || `HTTP ${resp.status}`);
@@ -461,11 +638,10 @@ function stCell(value, errorMsg, xid) {
   if (['Y','PRICED','PROCESSED','SENT'].includes(v)) cls = 'st-ok';
   else if (['N','NOT_PROCESSED','REPROCESS'].includes(v)) cls = 'st-warn';
   else if (['ERROR','HOLD'].includes(v)) cls = 'st-err';
-  // If ERROR and we have an error message, make it clickable
   if (v === 'ERROR' && errorMsg && xid) {
     const safeMsg = errorMsg.replace(/'/g, "\\'").replace(/"/g, '&quot;');
     const safeXid = xid.replace(/'/g, "\\'");
-    return `<td><span class="st ${cls}" style="cursor:pointer;text-decoration:underline dotted;" title="Click to see error details" onclick="openBtfError('${safeXid}','${safeMsg}')">⚠ ERROR</span></td>`;
+    return `<td><span class="st ${cls}" style="cursor:pointer;text-decoration:underline dotted;" title="Click to see error details" onclick="openBtfError('${safeXid}','${safeMsg}')">⚠ Error</span></td>`;
   }
   return `<td><span class="st ${cls}">${value}</span></td>`;
 }
@@ -489,36 +665,39 @@ function actionCell(s) {
   const fpBlocked = attr10 !== null && attr10 !== undefined && attr10 !== '';
 
   if (isFP) {
-    const btfElig   = (st.BTF_SHIP_IND?.value       || '').toUpperCase();
-    const btfPrice  = (st.BTF_RATE_IND?.value        || '').toUpperCase();
-    const usbStatus = (st.SEND_SHIPMENT_USB?.value   || '').toUpperCase();
+    const btfElig   = (st.BTF_SHIP_IND?.value     || '').toUpperCase();
+    const btfPrice  = (st.BTF_RATE_IND?.value      || '').toUpperCase();
+    const usbStatus = (st.SENT_TO_USB?.value        || '').toUpperCase();
 
-    // BTF Trigger — TL + BTF Elig Y + NOT_PROCESSED (ready to trigger)
+    // BTF Trigger — TL only
     if (isTL && btfElig === 'Y' && btfPrice === 'NOT_PROCESSED') {
       return `<td><button class="btn-btf" id="action-btn-${xid}" onclick="openModal('btf','${xid}','${carrier}',this)">⚡ Trigger BTF</button></td>`;
     }
-    // BTF Awaiting — TL + REPROCESS = waiting for OTM response, disable to prevent re-trigger
     if (isTL && btfPrice === 'REPROCESS') {
       return `<td><button class="btn-btf" disabled style="opacity:0.45;cursor:not-allowed;">⏳ Awaiting BTF...</button></td>`;
     }
-    // USB Trigger — non-TL shipments skip BTF entirely, trigger USB when NOT_PROCESSED + USB=N + FP Status blank
-    if (!isTL && (btfPrice === 'NOT_PROCESSED' || btfPrice === 'REPROCESS') && usbStatus === 'N' && !fpBlocked) {
-      return `<td><button class="btn-usb" id="action-btn-${xid}" onclick="openModal('usb','${xid}','${carrier}',this)">📡 Trigger USB</button></td>`;
+    // USB Trigger — NOT_PROCESSED or ERROR
+    const usbEligible = usbStatus === 'NOT_PROCESSED' || usbStatus === 'ERROR';
+    const usbLtlReady = !isTL && usbEligible && !fpBlocked;
+    const usbTlReady  = isTL && btfPrice === 'PRICED' && usbEligible && !fpBlocked;
+    if (usbLtlReady || usbTlReady) {
+      const label = usbStatus === 'ERROR' ? '📡 Retry USB' : '📡 Trigger USB';
+      return `<td><button class="btn-usb" id="action-btn-${xid}" onclick="openModal('usb','${xid}','${carrier}',this)">${label}</button></td>`;
     }
-    if (btfPrice === 'PRICED') {
-      return `<td><span class="st st-ok" style="font-size:10px;">✓ Priced</span></td>`;
+    if (btfPrice === 'PRICED' || usbStatus === 'SENT' || usbStatus === 'PROCESSED') {
+      return `<td><span class="st st-ok" style="font-size:10px;">✓ ${usbStatus === 'SENT' ? 'Sent' : usbStatus === 'PROCESSED' ? 'Processed' : 'Priced'}</span></td>`;
     }
     if (btfPrice === 'ERROR') {
       const safeMsg = (s.btfErrorMessage || 'No error details available.').replace(/'/g, "\\'");
       const safeXid = xid.replace(/'/g, "\\'");
-      return `<td><span class="st st-err" style="font-size:10px;cursor:pointer;text-decoration:underline dotted;" onclick="openBtfError('${safeXid}','${safeMsg}')">⚠ Error</span></td>`;
+      return `<td><span class="st st-err" style="font-size:10px;cursor:pointer;text-decoration:underline dotted;" onclick="openBtfError('${safeXid}','${safeMsg}')">⚠ BTF Error</span></td>`;
     }
-    if (btfPrice === 'HOLD') {
+    if (btfPrice === 'HOLD' || usbStatus === 'HOLD') {
       return `<td><span class="st st-warn" style="font-size:10px;">⏸ Hold</span></td>`;
     }
     return `<td><span class="st st-null">—</span></td>`;
   } else {
-    // Send to PO — TOC only, attributeNumber1 is null or 2
+    // Send to PO — TOC only
     const attrNum1 = s.attributeNumber1;
     const eligible = attrNum1 === null || attrNum1 === undefined || attrNum1 === '' || String(attrNum1) === '2';
     if (eligible) {
@@ -531,110 +710,481 @@ function actionCell(s) {
 function renderResults(data) {
   document.getElementById('search-results').style.display = 'block';
   const meta = document.getElementById('result-meta');
-  let mh = `<span style="font-size:12px;font-weight:600;color:var(--ink3);">${data.totalCount} shipment${data.totalCount!==1?'s':''} found</span>`;
-  mh += ` <span style="font-size:11px;color:var(--ink4);">· Live from OTM</span>`;
-  meta.innerHTML = mh;
+  meta.innerHTML = `<span style="font-size:12px;font-weight:600;color:var(--ink3);">${data.totalCount} shipment${data.totalCount!==1?'s':''} found</span>
+    <span style="font-size:11px;color:var(--ink4);">· Live from OTM</span>`;
 
   const tbody = document.getElementById('results-body');
   if (!data.items || data.items.length === 0) {
     tbody.innerHTML = `<tr><td colspan="17" style="text-align:center;padding:28px;color:var(--ink4);">No shipments found.</td></tr>`;
     return;
   }
+  tbody.innerHTML = data.items.map(s => buildShipmentRow(s)).join('');
+}
 
-  tbody.innerHTML = data.items.map(s => {
-    const isFP = s.shipmentAsWork;
-    const startDate = s.startTime ? s.startTime.split('T')[0] : '—';
-    const weight = s.totalWeight != null ? `${Number(s.totalWeight).toLocaleString()} ${s.weightUnit||''}` : '—';
-    const cost = s.totalActualCost != null
-      ? `$${Number(s.totalActualCost).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}` : '—';
-    const typeChip = isFP ? `<span class="chip chip-teal">FP</span>` : `<span class="chip chip-gray">TOC</span>`;
-    const rowCls = isFP ? 'row-fp' : '';
-    const st = s.statuses || {};
+function buildShipmentRow(s) {
+  const isFP = s.shipmentAsWork;
+  const startDate = s.startTime ? s.startTime.split('T')[0] : '—';
+  const weight = s.totalWeight != null ? `${Number(s.totalWeight).toLocaleString()} ${s.weightUnit||''}` : '—';
+  const cost = s.totalActualCost != null
+    ? `$${Number(s.totalActualCost).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}` : '—';
+  const typeChip = isFP ? `<span class="chip chip-teal">FP</span>` : `<span class="chip chip-gray">TOC</span>`;
+  const rowCls = isFP ? 'row-fp' : '';
+  const st = s.statuses || {};
+  let srcChip = `<span class="st st-null">—</span>`;
+  if (s.dataSource) {
+    const dc = s.dataSource.toUpperCase().includes('SAP') ? 'chip-amber' : 'chip-blue';
+    srcChip = `<span class="chip ${dc}">${s.dataSource}</span>`;
+  }
+  const btfElig  = isFP ? stCell(st.BTF_SHIP_IND?.value) : `<td><span class="st st-null">—</span></td>`;
+  const btfPrice = isFP ? stCell(st.BTF_RATE_IND?.value, s.btfErrorMessage, s.shipmentXid) : `<td><span class="st st-null">—</span></td>`;
+  const usbSt    = isFP ? stCell(st.SENT_TO_USB?.value) : `<td><span class="st st-null">—</span></td>`;
+  const fpSt     = fpStatusCell(isFP, s.attribute10);
+  const action   = actionCell(s);
+  return `<tr class="${rowCls}">
+    <td class="mono" style="color:var(--blue);font-weight:600;font-size:11px;">${s.shipmentXid||'—'}</td>
+    <td class="mono">${s.shipmentName||'—'}</td>
+    <td class="mono" style="font-size:11px;">${s.orderNumber||'—'}</td>
+    <td>${typeChip}</td><td>${srcChip}</td>
+    <td><span class="chip chip-gray">${s.transportMode||'—'}</span></td>
+    <td style="font-weight:500;">${s.carrier||'—'}</td>
+    <td class="mono" style="font-size:10px;">${s.sourceLocation||'—'}</td>
+    <td class="mono" style="font-size:10px;">${s.destLocation||'—'}</td>
+    <td style="color:var(--ink3);">${startDate}</td>
+    <td>${weight}</td>
+    <td style="font-weight:600;">${cost}</td>
+    ${btfElig}${btfPrice}${usbSt}${fpSt}${action}
+  </tr>`;
+}
 
-    let srcChip = `<span class="st st-null">—</span>`;
-    if (s.dataSource) {
-      const dc = s.dataSource.toUpperCase().includes('SAP') ? 'chip-amber' : 'chip-blue';
-      srcChip = `<span class="chip ${dc}">${s.dataSource}</span>`;
+// ── BULK RENDER ──
+function renderBulkResults(data) {
+  const container = document.getElementById('bulk-results');
+  container.style.display = 'block';
+  const found    = data.results.filter(r => r.totalCount > 0).length;
+  const notFound = data.results.filter(r => r.totalCount === 0).length;
+  const errors   = data.results.filter(r => r.errors && r.errors.length > 0).length;
+  let html = `<div class="bulk-summary-bar">
+    <span>🔍 <strong>${data.totalValues}</strong> values searched</span>
+    <span>📦 <strong>${data.totalShipments}</strong> total shipments found</span>
+    <span style="color:var(--green);">✓ <strong>${found}</strong> with results</span>
+    ${notFound ? `<span style="color:var(--ink4);">○ <strong>${notFound}</strong> no results</span>` : ''}
+    ${errors   ? `<span style="color:var(--red);">⚠ <strong>${errors}</strong> errors</span>` : ''}
+  </div>`;
+
+  data.results.forEach((group, idx) => {
+    const hasResults = group.totalCount > 0;
+    const hasError   = group.errors && group.errors.length > 0;
+    const countCls   = hasError ? 'error' : hasResults ? 'found' : 'none';
+    const countLbl   = hasError ? '⚠ Error' : hasResults ? `${group.totalCount} found` : 'No results';
+    let rowsHtml = '';
+    if (!hasResults) {
+      rowsHtml = `<tr><td colspan="17" style="text-align:center;padding:20px;color:var(--ink4);font-size:12px;">
+        ${hasError ? `⚠ ${group.errors[0]}` : 'No shipments found for this value.'}</td></tr>`;
+    } else {
+      rowsHtml = group.items.map(s => buildShipmentRow(s)).join('');
+    }
+    html += `<div class="bulk-group" id="bulk-group-${idx}">
+      <div class="bulk-group-header" onclick="toggleBulkGroup(${idx})">
+        <span class="bulk-group-xid">${group.searchValue}</span>
+        <span class="bulk-group-count ${countCls}">${countLbl}</span>
+        <span class="bulk-group-toggle">▼</span>
+      </div>
+      <div class="bulk-group-body">
+        <div class="table-wrap"><table>
+          <thead><tr>
+            <th>Shipment Id</th><th>Name</th><th>Order No.</th><th>Type</th><th>Src</th><th>Mode</th><th>Carrier</th>
+            <th>Origin</th><th>Dest</th><th>Start</th><th>Weight</th><th>Cost (USD)</th>
+            <th class="status-col">BTF Elig</th><th class="status-col">BTF Pricing</th>
+            <th class="status-col">USB Status</th>
+            <th class="fp-col">FP Status</th><th class="action-col">Actions</th>
+          </tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table></div>
+      </div>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+
+function toggleBulkGroup(idx) {
+  document.getElementById(`bulk-group-${idx}`).classList.toggle('collapsed');
+}
+
+// ── UMS RECONCILIATION ──
+function setToggle(el, group) {
+  el.closest('.toggle-group').querySelectorAll('.toggle-opt').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function handleFileUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const zone = document.getElementById('upload-zone');
+  zone.classList.add('has-file');
+  document.getElementById('upload-icon').textContent = '✅';
+  document.getElementById('upload-title').textContent = file.name;
+  document.getElementById('upload-sub').textContent = `${(file.size/1024).toFixed(0)} KB · Ready to process`;
+  document.getElementById('upload-actions').innerHTML = `<button class="btn-sm" onclick="event.stopPropagation();resetUpload()">↺ Replace</button>`;
+  document.getElementById('run-recon-btn').disabled = false;
+  // Store file reference for processing
+  window._umsFile = file;
+}
+
+function resetUpload() {
+  const zone = document.getElementById('upload-zone');
+  zone.classList.remove('has-file');
+  document.getElementById('upload-icon').textContent = '📂';
+  document.getElementById('upload-title').textContent = 'Drop UMS sheet here or click to upload';
+  document.getElementById('upload-sub').textContent = 'Accepts .xlsx or .csv · Columns A–AM expected';
+  document.getElementById('upload-actions').innerHTML = '';
+  document.getElementById('run-recon-btn').disabled = true;
+  document.getElementById('ums-summary').style.display = 'none';
+  document.getElementById('ums-results-card').style.display = 'none';
+  document.getElementById('ums-empty').style.display = 'block';
+  document.getElementById('ums-file-input').value = '';
+  window._umsFile = null;
+  umsRows = [];
+}
+
+async function runReconciliation() {
+  if (!window._umsFile) { showToast('Please upload a UMS file first', 'err'); return; }
+
+  const sortMode = document.querySelector('.toggle-group .toggle-opt.active[onclick*="sort"]')?.textContent || '';
+  const rowsMode = document.querySelector('.toggle-group .toggle-opt.active[onclick*="rows"]')?.textContent || 'Top 10';
+  const rowLimit = rowsMode.includes('10') ? 10 : rowsMode.includes('25') ? 25 : rowsMode.includes('50') ? 50 : 9999;
+
+  document.getElementById('ums-empty').style.display = 'none';
+  document.getElementById('ums-summary').style.display = 'none';
+  document.getElementById('ums-results-card').style.display = 'none';
+  document.getElementById('run-recon-btn').disabled = true;
+
+  // Show progress
+  const progressWrap = document.getElementById('ums-progress');
+  progressWrap.classList.add('visible');
+
+  try {
+    // Parse file
+    document.getElementById('ums-progress-label').textContent = '📂 Parsing UMS file...';
+    const rows = await parseUmsFile(window._umsFile);
+    if (!rows || rows.length === 0) throw new Error('No data rows found in file.');
+
+    // Sort
+    let sorted = [...rows];
+    if (sortMode.includes('Age')) {
+      sorted.sort((a, b) => (b.age || 0) - (a.age || 0));
+    } else if (sortMode.includes('Financial')) {
+      sorted.sort((a, b) => new Date(b.financialStatusDate) - new Date(a.financialStatusDate));
+    }
+    const selected = sorted.slice(0, rowLimit);
+
+    // Search OTM in batches of 100
+    const searchKey = document.querySelector('.toggle-group .toggle-opt.active[onclick*="key"]')?.textContent || '';
+    const useOrder = !searchKey.includes('PO No. Only');
+    const usePO    = !searchKey.includes('Order No. Only');
+
+    const searchValues = [...new Set(selected.flatMap(r => {
+      const vals = [];
+      if (useOrder && r.orderNumber) vals.push(r.orderNumber);
+      if (usePO && r.poNumber && r.poNumber !== 'NS') vals.push(r.poNumber);
+      return vals;
+    }))];
+
+    const BATCH_SIZE = 100;
+    const batches = [];
+    for (let i = 0; i < searchValues.length; i += BATCH_SIZE) {
+      batches.push(searchValues.slice(i, i + BATCH_SIZE));
     }
 
-    const btfElig  = isFP ? stCell(st.BTF_SHIP_IND?.value)     : `<td><span class="st st-null">—</span></td>`;
-    const btfPrice = isFP ? stCell(st.BTF_RATE_IND?.value, s.btfErrorMessage, s.shipmentXid)     : `<td><span class="st st-null">—</span></td>`;
-    const usbSt    = isFP ? stCell(st.SENT_TO_USB?.value) : `<td><span class="st st-null">—</span></td>`;
-    const fpSt     = fpStatusCell(isFP, s.attribute10);
-    const action   = actionCell(s);
+    // Build steps UI
+    const stepsEl = document.getElementById('ums-progress-steps');
+    stepsEl.innerHTML = batches.map((_, i) =>
+      `<span class="progress-step pending" id="ums-step-${i}">Batch ${i+1}</span>`
+    ).join('');
 
-    return `
-      <tr class="${rowCls}">
-        <td class="mono" style="color:var(--blue);font-weight:600;font-size:11px;">${s.shipmentXid||'—'}</td>
-        <td class="mono">${s.shipmentName||'—'}</td>
-        <td class="mono" style="font-size:11px;">${s.orderNumber||'—'}</td>
-        <td>${typeChip}</td>
-        <td>${srcChip}</td>
-        <td><span class="chip chip-gray">${s.transportMode||'—'}</span></td>
-        <td style="font-weight:500;">${s.carrier||'—'}</td>
-        <td class="mono" style="font-size:10px;">${s.sourceLocation||'—'}</td>
-        <td class="mono" style="font-size:10px;">${s.destLocation||'—'}</td>
-        <td style="color:var(--ink3);">${startDate}</td>
-        <td>${weight}</td>
-        <td style="font-weight:600;">${cost}</td>
-        ${btfElig}${btfPrice}${usbSt}${fpSt}${action}
-      </tr>`;
+    // Execute batches
+    const otmMap = {};
+    for (let i = 0; i < batches.length; i++) {
+      document.getElementById('ums-progress-label').textContent = `🔄 Searching OTM — Batch ${i+1} of ${batches.length}`;
+      document.getElementById('ums-progress-count').textContent = `${i * BATCH_SIZE} / ${searchValues.length} values`;
+      document.getElementById(`ums-step-${i}`).className = 'progress-step active';
+      const pct = Math.round((i / batches.length) * 100);
+      document.getElementById('ums-progress-fill').style.width = pct + '%';
+
+      const resp = await fetch(`${API}/api/bulk-search`, {
+        method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: batches[i].join(',')
+      });
+      const data = await resp.json();
+      data.results.forEach(group => {
+        if (group.items && group.items.length > 0) {
+          otmMap[group.searchValue] = group.items[0]; // take first match
+        }
+      });
+      document.getElementById(`ums-step-${i}`).className = 'progress-step done';
+      if (i < batches.length - 1) document.getElementById(`ums-step-${i+1}`).className = 'progress-step active';
+    }
+
+    document.getElementById('ums-progress-fill').style.width = '100%';
+    document.getElementById('ums-progress-label').textContent = '✅ Reconciliation complete';
+    document.getElementById('ums-progress-count').textContent = `${selected.length} / ${selected.length}`;
+
+    // Reconcile
+    const reconciled = selected.map(row => {
+      const orderMatch = otmMap[row.orderNumber];
+      const poMatch    = otmMap[row.poNumber];
+      const otmShipment = orderMatch || poMatch || null;
+      let matchStatus = 'not_found';
+      let costDelta = null;
+      if (otmShipment) {
+        const otmCost = otmShipment.totalActualCost;
+        if (otmCost !== null && otmCost !== undefined && row.billedAmount !== null) {
+          costDelta = row.billedAmount - otmCost;
+          matchStatus = Math.abs(costDelta) < 0.01 ? 'matched' : 'mismatch';
+        } else {
+          matchStatus = 'mismatch';
+          costDelta = row.billedAmount;
+        }
+      }
+      return { ...row, otmShipment, matchStatus, costDelta };
+    });
+
+    renderUmsResults(reconciled);
+  } catch (err) {
+    showToast(`❌ Error: ${err.message}`, 'err');
+  } finally {
+    document.getElementById('run-recon-btn').disabled = false;
+    setTimeout(() => progressWrap.classList.remove('visible'), 2000);
+  }
+}
+
+async function parseUmsFile(file) {
+  // Read as text for CSV, return structured rows
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const text = e.target.result;
+        const lines = text.split('\n').filter(l => l.trim());
+        if (lines.length < 2) { resolve([]); return; }
+        // Try to detect delimiter
+        const delim = lines[0].includes('\t') ? '\t' : ',';
+        const headers = lines[0].split(delim).map(h => h.trim().replace(/^"|"$/g,''));
+        const rows = lines.slice(1).map(line => {
+          const cols = line.split(delim).map(c => c.trim().replace(/^"|"$/g,''));
+          return {
+            documentNumber:      cols[0]  || '',
+            orderNumber:         cols[1]  || '',
+            financialStatusDate: cols[2]  || '',
+            financialStatus:     cols[3]  || '',
+            age:                 parseInt(cols[4]) || 0,
+            poNumber:            cols[6]  || '',
+            billedAmount:        parseFloat(cols[14]) || null,
+            issueDate:           cols[12] || '',
+          };
+        }).filter(r => r.documentNumber);
+        resolve(rows);
+      } catch(err) { reject(err); }
+    };
+    reader.onerror = reject;
+    // Try CSV first; xlsx would need SheetJS (can be added later)
+    reader.readAsText(file);
+  });
+}
+
+function renderUmsResults(rows) {
+  // Summary counts
+  const notFound = rows.filter(r => r.matchStatus === 'not_found').length;
+  const mismatch = rows.filter(r => r.matchStatus === 'mismatch').length;
+  const matched  = rows.filter(r => r.matchStatus === 'matched').length;
+  const critical = rows.filter(r => r.age > 180).length;
+
+  document.getElementById('sum-not-found').textContent = notFound;
+  document.getElementById('sum-mismatch').textContent  = mismatch;
+  document.getElementById('sum-matched').textContent   = matched;
+  document.getElementById('sum-critical').textContent  = critical;
+  document.getElementById('ums-summary').style.display = 'grid';
+
+  document.getElementById('ums-results-title').textContent =
+    `Reconciliation Results — ${rows.length} rows`;
+
+  const tbody = document.getElementById('ums-results-body');
+  tbody.innerHTML = rows.map((row, idx) => {
+    const ageCls = row.age > 180 ? 'age-critical' : row.age > 90 ? 'age-warn' : 'age-ok';
+    const rowCls = row.matchStatus === 'not_found' ? 'row-not-found'
+                 : row.matchStatus === 'mismatch'  ? 'row-mismatch'
+                 : 'row-matched';
+    const matchChip = row.matchStatus === 'not_found'
+      ? `<span class="chip chip-red">✗ Not Found</span>`
+      : row.matchStatus === 'mismatch'
+      ? `<span class="chip chip-amber">⚠ Mismatch</span>`
+      : `<span class="chip chip-green">✓ Matched</span>`;
+
+    const otmXid = row.otmShipment ? `<span class="mono" style="color:var(--teal);font-weight:600;">${row.otmShipment.shipmentXid||'—'}</span>` : `<span class="st-null">—</span>`;
+    const otmCost = row.otmShipment && row.otmShipment.totalActualCost != null
+      ? `$${Number(row.otmShipment.totalActualCost).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`
+      : '—';
+    const billedFmt = row.billedAmount != null
+      ? `$${Number(row.billedAmount).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}` : '—';
+    const deltaTd = row.costDelta != null
+      ? `<td style="font-weight:700;color:${Math.abs(row.costDelta)<0.01?'var(--green)':row.costDelta>0?'var(--amber)':'var(--red)'};">
+          ${Math.abs(row.costDelta)<0.01?'$0.00':(row.costDelta>0?'+':'')+'$'+Math.abs(row.costDelta).toFixed(2)}
+        </td>`
+      : `<td class="st-null">—</td>`;
+
+    const st = row.otmShipment?.statuses || {};
+    const btfVal = st.BTF_RATE_IND?.value || '';
+    const btfTd  = row.otmShipment ? stCell(btfVal) : `<td class="st-null">—</td>`;
+    const fpTd   = row.otmShipment ? fpStatusCell(row.otmShipment.shipmentAsWork, row.otmShipment.attribute10) : `<td class="st-null">—</td>`;
+
+    let actionTd = `<td><button class="btn-sm" style="font-size:10px;" onclick="searchFromUms('${row.orderNumber}','${row.poNumber}')">🔍 Lookup</button></td>`;
+    if (row.otmShipment) {
+      actionTd = `<td>${actionCell(row.otmShipment).replace('<td>','').replace('</td>','')}</td>`;
+    }
+
+    return `<tr class="${rowCls}" id="ums-row-${idx}">
+      <td><button class="expand-btn" onclick="toggleUmsExpand(${idx})">▶</button></td>
+      <td><span class="age-badge ${ageCls}">${row.age}d</span></td>
+      <td class="mono" style="color:var(--blue);font-weight:600;">${row.documentNumber||'—'}</td>
+      <td class="mono">${row.orderNumber||'—'}</td>
+      <td class="mono">${row.poNumber||'—'}</td>
+      <td style="font-weight:600;">${billedFmt}</td>
+      <td style="color:var(--ink3);">${row.issueDate||'—'}</td>
+      <td>${matchChip}</td>
+      <td>${otmXid}</td>
+      <td style="font-weight:600;color:var(--teal);">${otmCost}</td>
+      ${deltaTd}${btfTd}${fpTd}${actionTd}
+    </tr>
+    <tr class="row-expanded-detail" id="ums-expand-${idx}" style="display:none;">
+      <td colspan="14">${buildUmsExpandPanel(row)}</td>
+    </tr>`;
   }).join('');
+
+  document.getElementById('ums-results-card').style.display = 'block';
+  document.getElementById('ums-empty').style.display = 'none';
+}
+
+function buildUmsExpandPanel(row) {
+  const otm = row.otmShipment;
+  const otmSection = otm ? `
+    <div class="expand-grid">
+      <div class="expand-field"><div class="expand-field-label">Shipment Id</div><div class="expand-field-val">${otm.shipmentXid||'—'}</div></div>
+      <div class="expand-field"><div class="expand-field-label">Carrier</div><div class="expand-field-val">${otm.carrier||'—'}</div></div>
+      <div class="expand-field ${row.costDelta && Math.abs(row.costDelta)>0.01?'diff':''}">
+        <div class="expand-field-label">OTM Cost${row.costDelta && Math.abs(row.costDelta)>0.01?' ⚠':''}</div>
+        <div class="expand-field-val">$${Number(otm.totalActualCost||0).toFixed(2)}</div>
+      </div>
+      <div class="expand-field"><div class="expand-field-label">Transport Mode</div><div class="expand-field-val">${otm.transportMode||'—'}</div></div>
+      <div class="expand-field"><div class="expand-field-label">BTF Pricing</div><div class="expand-field-val">${otm.statuses?.BTF_RATE_IND?.value||'—'}</div></div>
+      <div class="expand-field"><div class="expand-field-label">USB Status</div><div class="expand-field-val">${otm.statuses?.SENT_TO_USB?.value||'—'}</div></div>
+    </div>` : `<div style="background:var(--red-lt);border:1px solid #fca5a5;border-radius:8px;padding:12px;text-align:center;color:var(--red);font-size:12px;font-weight:600;">
+      ✗ No shipment found in OTM for Order No. <strong>${row.orderNumber}</strong> or PO <strong>${row.poNumber}</strong>
+    </div>`;
+
+  return `<div class="expand-panel">
+    <div class="expand-section">
+      <h4 class="ums">📄 UMS Sheet Data</h4>
+      <div class="expand-grid">
+        <div class="expand-field"><div class="expand-field-label">Document No.</div><div class="expand-field-val">${row.documentNumber}</div></div>
+        <div class="expand-field"><div class="expand-field-label">Order No.</div><div class="expand-field-val">${row.orderNumber}</div></div>
+        <div class="expand-field"><div class="expand-field-label">PO Number</div><div class="expand-field-val">${row.poNumber}</div></div>
+        <div class="expand-field ${row.costDelta && Math.abs(row.costDelta)>0.01?'diff':''}">
+          <div class="expand-field-label">Billed Amount${row.costDelta && Math.abs(row.costDelta)>0.01?' ⚠':''}</div>
+          <div class="expand-field-val">$${Number(row.billedAmount||0).toFixed(2)}</div>
+        </div>
+        <div class="expand-field"><div class="expand-field-label">Issue Date</div><div class="expand-field-val">${row.issueDate}</div></div>
+        <div class="expand-field"><div class="expand-field-label">Age (Days)</div><div class="expand-field-val">${row.age}</div></div>
+      </div>
+    </div>
+    <div class="expand-section">
+      <h4 class="otm">🔗 OTM Data</h4>
+      ${otmSection}
+    </div>
+  </div>`;
+}
+
+function toggleUmsExpand(idx) {
+  const detail = document.getElementById(`ums-expand-${idx}`);
+  const btn    = document.querySelector(`#ums-row-${idx} .expand-btn`);
+  const isOpen = detail.style.display !== 'none';
+  detail.style.display = isOpen ? 'none' : 'table-row';
+  btn.textContent = isOpen ? '▶' : '▼';
+}
+
+function searchFromUms(orderNo, poNo) {
+  nav('search');
+  const vals = [orderNo, poNo].filter(v => v && v !== 'NS').join(', ');
+  document.getElementById('search-input').value = vals;
+  doSearch();
+}
+
+function exportUmsResults() {
+  showToast('Export feature — requires SheetJS integration (coming soon)', 'ok');
+}
+
+// ── REFRESH BAR ──
+function showRefreshBar() {
+  const bar = document.getElementById('refresh-bar');
+  if (bar) bar.style.display = 'flex';
+}
+function hideRefreshBar() {
+  const bar = document.getElementById('refresh-bar');
+  if (bar) bar.style.display = 'none';
+}
+
+// ── TOAST ──
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast toast-${type} show`;
+  setTimeout(() => t.classList.remove('show'), 4000);
 }
 
 // ── MODAL ──
 function openModal(type, xid, carrier, btnEl) {
   pendingAction = { type, xid, carrier, btnEl: btnEl || null };
-
   document.getElementById('modal-xid').textContent     = xid;
   document.getElementById('modal-carrier').textContent = carrier;
 
   if (type === 'btf') {
-    document.getElementById('modal-icon').className      = 'modal-icon modal-icon-btf';
-    document.getElementById('modal-icon').textContent    = '⚡';
-    document.getElementById('modal-title').textContent   = 'Trigger BTF Pricing';
-    document.getElementById('modal-sub').textContent     = 'Send BTF reprocess request to OTM WMServlet';
+    document.getElementById('modal-icon').className    = 'modal-icon modal-icon-btf';
+    document.getElementById('modal-icon').textContent  = '⚡';
+    document.getElementById('modal-title').textContent = 'Trigger BTF Pricing';
+    document.getElementById('modal-sub').textContent   = 'Send BTF reprocess request to OTM WMServlet';
     document.getElementById('modal-extra-lbl').textContent = 'Current BTF Pricing';
     document.getElementById('modal-extra-val').textContent = 'NOT_PROCESSED';
     document.getElementById('modal-extra-val').style.color = 'var(--amber)';
-    document.getElementById('modal-warning').className   = 'modal-warning modal-warning-btf';
+    document.getElementById('modal-warning').className = 'modal-warning modal-warning-btf';
     document.getElementById('modal-warning-text').textContent = 'This will POST an XML message to OTM to trigger BTF fuel cost calculation. BTF_RATE_IND will be set to REPROCESS.';
     const btn = document.getElementById('modal-confirm-btn');
-    btn.className   = 'btn-confirm-btf';
-    btn.textContent = '⚡ Confirm & Send';
+    btn.className = 'btn-confirm-btf'; btn.textContent = '⚡ Confirm & Send';
   } else if (type === 'usb') {
-    document.getElementById('modal-icon').className      = 'modal-icon modal-icon-usb';
-    document.getElementById('modal-icon').textContent    = '📡';
-    document.getElementById('modal-title').textContent   = 'Trigger USB';
-    document.getElementById('modal-sub').textContent     = 'Send SEND_SHIPMENT_USB - R to OTM WMServlet';
+    document.getElementById('modal-icon').className    = 'modal-icon modal-icon-usb';
+    document.getElementById('modal-icon').textContent  = '📡';
+    document.getElementById('modal-title').textContent = 'Trigger USB';
+    document.getElementById('modal-sub').textContent   = 'Send SEND_SHIPMENT_USB - R to OTM WMServlet';
     document.getElementById('modal-extra-lbl').textContent = 'Status Value';
     document.getElementById('modal-extra-val').textContent = 'SEND_SHIPMENT_USB - R';
     document.getElementById('modal-extra-val').style.color = 'var(--teal)';
-    document.getElementById('modal-warning').className   = 'modal-warning modal-warning-usb';
-    document.getElementById('modal-warning-text').textContent = 'This will POST an XML message to OTM to trigger USB transmission. SEND_SHIPMENT_USB will be set to R.';
+    document.getElementById('modal-warning').className = 'modal-warning modal-warning-usb';
+    document.getElementById('modal-warning-text').textContent = 'This will POST an XML message to OTM to trigger USB transmission. SENT_TO_USB will transition from NOT_PROCESSED or ERROR to the next state.';
     const btn = document.getElementById('modal-confirm-btn');
-    btn.className   = 'btn-confirm-usb';
-    btn.textContent = '📡 Confirm & Send';
+    btn.className = 'btn-confirm-usb'; btn.textContent = '📡 Confirm & Send';
   } else {
-    document.getElementById('modal-icon').className      = 'modal-icon modal-icon-po';
-    document.getElementById('modal-icon').textContent    = '📤';
-    document.getElementById('modal-title').textContent   = 'Send to PO';
-    document.getElementById('modal-sub').textContent     = 'Trigger FP shipment creation via OTM PO workflow';
+    document.getElementById('modal-icon').className    = 'modal-icon modal-icon-po';
+    document.getElementById('modal-icon').textContent  = '📤';
+    document.getElementById('modal-title').textContent = 'Send to PO';
+    document.getElementById('modal-sub').textContent   = 'Trigger FP shipment creation via OTM PO workflow';
     document.getElementById('modal-extra-lbl').textContent = 'Action';
     document.getElementById('modal-extra-val').textContent = 'SEND_SHIPMENT_PO - R';
     document.getElementById('modal-extra-val').style.color = 'var(--orange)';
-    document.getElementById('modal-warning').className   = 'modal-warning modal-warning-po';
+    document.getElementById('modal-warning').className = 'modal-warning modal-warning-po';
     document.getElementById('modal-warning-text').textContent = 'This will POST an XML message to OTM to trigger the Send to PO workflow. An FP shipment will be created with Data Source = OTM.';
     const btn = document.getElementById('modal-confirm-btn');
-    btn.className   = 'btn-confirm-po';
-    btn.textContent = '📤 Confirm & Send';
+    btn.className = 'btn-confirm-po'; btn.textContent = '📤 Confirm & Send';
   }
 
-  // Reset confirm button state (may have been disabled by a prior action)
   const confirmBtn = document.getElementById('modal-confirm-btn');
   confirmBtn.disabled = false;
   confirmBtn.style.pointerEvents = '';
-
   document.getElementById('modal-overlay').classList.add('open');
 }
 
@@ -644,7 +1194,7 @@ function closeModal() {
 }
 
 function openBtfError(xid, message) {
-  document.getElementById('btf-error-xid').textContent = xid;
+  document.getElementById('btf-error-xid').textContent  = xid;
   document.getElementById('btf-error-text').textContent = message || 'No error details available.';
   document.getElementById('btf-error-overlay').classList.add('open');
 }
@@ -659,10 +1209,9 @@ function handleOverlayClick(e) {
 
 async function confirmAction() {
   if (!pendingAction) return;
-  // Capture everything upfront before closeModal nulls pendingAction
-  const type   = pendingAction.type;
-  const xid    = pendingAction.xid;
-  const btnEl  = pendingAction.btnEl;
+  const type  = pendingAction.type;
+  const xid   = pendingAction.xid;
+  const btnEl = pendingAction.btnEl;
   if (actionsInFlight.has(xid)) return;
   actionsInFlight.add(xid);
 
@@ -670,11 +1219,8 @@ async function confirmAction() {
   confirmBtn.disabled = true;
   confirmBtn.style.pointerEvents = 'none';
   confirmBtn.innerHTML = '<span class="spinner"></span> Sending...';
-
-  // Close modal right away — frees up pendingAction for next action
   closeModal();
 
-  // Mark row as sending using the stored element reference
   if (btnEl) btnEl.outerHTML = `<span class="btn-sending" id="action-btn-${xid}"><span class="spinner spinner-dark" style="width:10px;height:10px;border-top-color:var(--ink3);"></span> Sending...</span>`;
 
   const endpoint = type === 'btf'
@@ -689,7 +1235,7 @@ async function confirmAction() {
   try {
     const resp = await fetch(endpoint, { method: 'POST' });
     const data = await resp.json();
-    const btn = document.getElementById(`action-btn-${xid}`);
+    const btn  = document.getElementById(`action-btn-${xid}`);
     if (data.status === 'ok') {
       const label = type === 'btf' ? 'BTF trigger' : type === 'usb' ? 'USB trigger' : 'Send to PO';
       if (btn) btn.outerHTML = `<span class="btn-sent-ok">✅ Sent</span>`;
@@ -706,127 +1252,6 @@ async function confirmAction() {
   } finally {
     actionsInFlight.delete(xid);
   }
-}
-
-// ── REFRESH BAR ──
-function showRefreshBar() {
-  const bar = document.getElementById('refresh-bar');
-  if (bar) bar.style.display = 'flex';
-}
-
-function hideRefreshBar() {
-  const bar = document.getElementById('refresh-bar');
-  if (bar) bar.style.display = 'none';
-}
-
-// ── TOAST ──
-function showToast(msg, type) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = `toast toast-${type} show`;
-  setTimeout(() => t.classList.remove('show'), 4000);
-}
-
-// ── BULK RENDER ──
-function renderBulkResults(data) {
-  const container = document.getElementById('bulk-results');
-  container.style.display = 'block';
-
-  // Summary bar
-  const found = data.results.filter(r => r.totalCount > 0).length;
-  const notFound = data.results.filter(r => r.totalCount === 0).length;
-  const errors = data.results.filter(r => r.errors && r.errors.length > 0).length;
-  let html = `
-    <div class="bulk-summary-bar">
-      <span>🔍 <strong>${data.totalValues}</strong> values searched</span>
-      <span>📦 <strong>${data.totalShipments}</strong> total shipments found</span>
-      <span style="color:var(--green);">✓ <strong>${found}</strong> with results</span>
-      ${notFound ? `<span style="color:var(--ink4);">○ <strong>${notFound}</strong> no results</span>` : ''}
-      ${errors  ? `<span style="color:var(--red);">⚠ <strong>${errors}</strong> errors</span>` : ''}
-    </div>`;
-
-  // One group per search value
-  data.results.forEach((group, idx) => {
-    const hasResults = group.totalCount > 0;
-    const hasError   = group.errors && group.errors.length > 0;
-    const countCls   = hasError ? 'error' : hasResults ? 'found' : 'none';
-    const countLbl   = hasError ? '⚠ Error' : hasResults ? `${group.totalCount} found` : 'No results';
-
-    // Query tags — intentionally omitted (internal implementation detail)
-    const queryTags = '';
-
-    // Rows
-    let rowsHtml = '';
-    if (!hasResults) {
-      rowsHtml = `<tr><td colspan="17" style="text-align:center;padding:20px;color:var(--ink4);font-size:12px;">
-        ${hasError ? `⚠ ${group.errors[0]}` : 'No shipments found for this value.'}</td></tr>`;
-    } else {
-      rowsHtml = group.items.map(s => {
-        const isFP = s.shipmentAsWork;
-        const startDate = s.startTime ? s.startTime.split('T')[0] : '—';
-        const weight = s.totalWeight != null ? `${Number(s.totalWeight).toLocaleString()} ${s.weightUnit||''}` : '—';
-        const cost = s.totalActualCost != null
-          ? `$${Number(s.totalActualCost).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}` : '—';
-        const typeChip = isFP ? `<span class="chip chip-teal">FP</span>` : `<span class="chip chip-gray">TOC</span>`;
-        const rowCls = isFP ? 'row-fp' : '';
-        const st = s.statuses || {};
-        let srcChip = `<span class="st st-null">—</span>`;
-        if (s.dataSource) {
-          const dc = s.dataSource.toUpperCase().includes('SAP') ? 'chip-amber' : 'chip-blue';
-          srcChip = `<span class="chip ${dc}">${s.dataSource}</span>`;
-        }
-        const btfElig  = isFP ? stCell(st.BTF_SHIP_IND?.value)     : `<td><span class="st st-null">—</span></td>`;
-        const btfPrice = isFP ? stCell(st.BTF_RATE_IND?.value, s.btfErrorMessage, s.shipmentXid)     : `<td><span class="st st-null">—</span></td>`;
-        const usbSt    = isFP ? stCell(st.SENT_TO_USB?.value) : `<td><span class="st st-null">—</span></td>`;
-        const fpSt     = fpStatusCell(isFP, s.attribute10);
-        const action   = actionCell(s);
-        return `<tr class="${rowCls}">
-          <td class="mono" style="color:var(--blue);font-weight:600;font-size:11px;">${s.shipmentXid||'—'}</td>
-          <td class="mono">${s.shipmentName||'—'}</td>
-          <td class="mono" style="font-size:11px;">${s.orderNumber||'—'}</td>
-          <td>${typeChip}</td>
-          <td>${srcChip}</td>
-          <td><span class="chip chip-gray">${s.transportMode||'—'}</span></td>
-          <td style="font-weight:500;">${s.carrier||'—'}</td>
-          <td class="mono" style="font-size:10px;">${s.sourceLocation||'—'}</td>
-          <td class="mono" style="font-size:10px;">${s.destLocation||'—'}</td>
-          <td style="color:var(--ink3);">${startDate}</td>
-          <td>${weight}</td>
-          <td style="font-weight:600;">${cost}</td>
-          ${btfElig}${btfPrice}${usbSt}${fpSt}${action}
-        </tr>`;
-      }).join('');
-    }
-
-    html += `
-      <div class="bulk-group" id="bulk-group-${idx}">
-        <div class="bulk-group-header" onclick="toggleBulkGroup(${idx})">
-          <span class="bulk-group-xid">${group.searchValue}</span>
-          <span class="bulk-group-count ${countCls}">${countLbl}</span>
-          <span class="bulk-group-toggle">▼</span>
-        </div>
-        <div class="bulk-group-body">
-          <div class="table-wrap">
-            <table>
-              <thead><tr>
-                <th>Shipment ID</th><th>Name</th><th>Order No.</th><th>Type</th><th>Src</th><th>Mode</th><th>Carrier</th>
-                <th>Origin</th><th>Dest</th><th>Start</th><th>Weight</th><th>Cost (USD)</th>
-                <th class="status-col">BTF Elig</th><th class="status-col">BTF Pricing</th>
-                <th class="status-col">USB Status</th>
-                <th class="fp-col">FP Status</th><th class="action-col">Actions</th>
-              </tr></thead>
-              <tbody>${rowsHtml}</tbody>
-            </table>
-          </div>
-        </div>
-      </div>`;
-  });
-
-  container.innerHTML = html;
-}
-
-function toggleBulkGroup(idx) {
-  document.getElementById(`bulk-group-${idx}`).classList.toggle('collapsed');
 }
 
 // ── HEALTH CHECK ──
