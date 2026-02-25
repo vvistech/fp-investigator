@@ -163,7 +163,7 @@ def parse_shipment(raw: dict) -> dict:
     data_source = refnums["dataSource"]
     order_number = refnums["orderNumber"]
     btf_error   = parse_remarks(raw.get("remarks", {}))
-    is_fp       = raw.get("shipmentAsWork", False) or "SEND_SHIPMENT_USB" in statuses
+    is_fp       = raw.get("shipmentAsWork") == "Y" or "SEND_SHIPMENT_USB" in statuses
 
     return {
         "shipmentXid":      raw.get("shipmentXid"),
