@@ -655,7 +655,9 @@ function fpStatusCell(isFP, attr10) {
 }
 
 // ── ACTION CELL ──
-function actionCell(s) {
+// siblings = array of all shipments in the same search result group
+// Used to suppress "Send to PO" on TOC rows when a clean FP sibling already exists
+function actionCell(s, siblings) {
   const isFP    = s.shipmentAsWork;
   const isTL    = (s.transportMode || '').toUpperCase() === 'TL';
   const st      = s.statuses || {};
@@ -698,6 +700,21 @@ function actionCell(s) {
     return `<td><span class="st st-null">—</span></td>`;
   } else {
     // Send to PO — TOC only
+    // Suppress if a clean FP sibling already exists in the same result group
+    // A clean FP sibling = shipmentAsWork:true AND (SENT_TO_USB = SENT/PROCESSED OR attribute10 = null)
+    const siblings_ = siblings || [];
+    const fpSiblingExists = siblings_.some(sib => {
+      if (!sib.shipmentAsWork || sib.shipmentXid === xid) return false;
+      const sibAttr10 = sib.attribute10;
+      const sibUsbStatus = (sib.statuses?.SENT_TO_USB?.value || '').toUpperCase();
+      const sibClean = (sibAttr10 === null || sibAttr10 === undefined || sibAttr10 === '')
+                    || sibUsbStatus === 'SENT'
+                    || sibUsbStatus === 'PROCESSED';
+      return sibClean;
+    });
+    if (fpSiblingExists) {
+      return `<td><span class="st st-null" title="FP shipment already exists for this order">—</span></td>`;
+    }
     const attrNum1 = s.attributeNumber1;
     const eligible = attrNum1 === null || attrNum1 === undefined || attrNum1 === '' || String(attrNum1) === '2';
     if (eligible) {
@@ -718,10 +735,10 @@ function renderResults(data) {
     tbody.innerHTML = `<tr><td colspan="17" style="text-align:center;padding:28px;color:var(--ink4);">No shipments found.</td></tr>`;
     return;
   }
-  tbody.innerHTML = data.items.map(s => buildShipmentRow(s)).join('');
+  tbody.innerHTML = data.items.map(s => buildShipmentRow(s, data.items)).join('');
 }
 
-function buildShipmentRow(s) {
+function buildShipmentRow(s, siblings) {
   const isFP = s.shipmentAsWork;
   const startDate = s.startTime ? s.startTime.split('T')[0] : '—';
   const weight = s.totalWeight != null ? `${Number(s.totalWeight).toLocaleString()} ${s.weightUnit||''}` : '—';
@@ -739,7 +756,7 @@ function buildShipmentRow(s) {
   const btfPrice = isFP ? stCell(st.BTF_RATE_IND?.value, s.btfErrorMessage, s.shipmentXid) : `<td><span class="st st-null">—</span></td>`;
   const usbSt    = isFP ? stCell(st.SENT_TO_USB?.value) : `<td><span class="st st-null">—</span></td>`;
   const fpSt     = fpStatusCell(isFP, s.attribute10);
-  const action   = actionCell(s);
+  const action   = actionCell(s, siblings || []);
   return `<tr class="${rowCls}">
     <td class="mono" style="color:var(--blue);font-weight:600;font-size:11px;">${s.shipmentXid||'—'}</td>
     <td class="mono">${s.shipmentName||'—'}</td>
@@ -781,7 +798,7 @@ function renderBulkResults(data) {
       rowsHtml = `<tr><td colspan="17" style="text-align:center;padding:20px;color:var(--ink4);font-size:12px;">
         ${hasError ? `⚠ ${group.errors[0]}` : 'No shipments found for this value.'}</td></tr>`;
     } else {
-      rowsHtml = group.items.map(s => buildShipmentRow(s)).join('');
+      rowsHtml = group.items.map(s => buildShipmentRow(s, group.items)).join('');
     }
     html += `<div class="bulk-group" id="bulk-group-${idx}">
       <div class="bulk-group-header" onclick="toggleBulkGroup(${idx})">
