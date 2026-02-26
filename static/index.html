@@ -1120,9 +1120,10 @@ function applyUmsFilter() {
 
   let rows = [...umsReconciledRows];
 
-  if (filterBtn.includes('Not Found'))   rows = rows.filter(r => r.matchStatus === 'not_found');
-  else if (filterBtn.includes('Found'))  rows = rows.filter(r => r.matchStatus === 'found');
-  else if (filterBtn.includes('Critical')) rows = rows.filter(r => r.age > 180);
+  const fb = filterBtn.trim();
+  if (fb === 'Not Found')              rows = rows.filter(r => r.matchStatus === 'not_found');
+  else if (fb === 'Found')             rows = rows.filter(r => r.matchStatus === 'found');
+  else if (fb.includes('Critical'))    rows = rows.filter(r => r.age > 180);
 
   if (textFilter) {
     rows = rows.filter(r =>
@@ -1160,9 +1161,12 @@ function umsSort(col) {
 
 // ── PAGINATION ──
 function umsChangePage(dir) {
-  const totalPages = Math.ceil(umsDisplayRows.length / UMS_PAGE_SIZE);
-  umsCurrentPage = Math.max(1, Math.min(totalPages, umsCurrentPage + dir));
+  const totalPages = Math.max(1, Math.ceil(umsDisplayRows.length / UMS_PAGE_SIZE));
+  const newPage = umsCurrentPage + dir;
+  if (newPage < 1 || newPage > totalPages) return;
+  umsCurrentPage = newPage;
   renderUmsTable();
+  document.getElementById('ums-results-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ── RENDER TABLE ──
