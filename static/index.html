@@ -374,7 +374,7 @@ tbody tr.row-matched td:first-child{border-left:3px solid var(--green);}
   <div class="page" id="page-ums">
     <div class="page-head">
       <h1>UMS Reconciliation</h1>
-      <p>Upload the weekly USB unmatched shipment sheet and cross-reference against OTM to surface discrepancies.</p>
+      <p>Upload the weekly USB unmatched shipment sheet and cross-reference against OTM.</p>
     </div>
 
     <!-- Upload zone -->
@@ -382,22 +382,21 @@ tbody tr.row-matched td:first-child{border-left:3px solid var(--green);}
       <div class="upload-icon" id="upload-icon">📂</div>
       <div class="upload-text">
         <h3 id="upload-title">Drop UMS sheet here or click to upload</h3>
-        <p id="upload-sub">Accepts .xlsx or .csv · Columns A–AM expected</p>
+        <p id="upload-sub">Accepts .xlsx · 40 columns expected (A–AN)</p>
       </div>
       <div class="upload-actions" id="upload-actions"></div>
-      <input type="file" id="ums-file-input" accept=".xlsx,.csv" style="display:none;" onchange="handleFileUpload(this)">
+      <input type="file" id="ums-file-input" accept=".xlsx,.xls" style="display:none;" onchange="handleFileUpload(this)">
     </div>
 
     <!-- Config row -->
     <div class="config-row">
-      <span class="config-label">Priority By</span>
+      <span class="config-label">Search Key</span>
       <div class="toggle-group">
-        <button class="toggle-opt active" onclick="setToggle(this,'sort')">🔴 Age (Oldest First)</button>
-        <button class="toggle-opt" onclick="setToggle(this,'sort')">📅 Financial Status Date</button>
-        <button class="toggle-opt" onclick="setToggle(this,'sort')">✏️ Custom</button>
+        <button class="toggle-opt active" id="key-order" onclick="setToggle(this,'key')">Order No. First</button>
+        <button class="toggle-opt" id="key-po" onclick="setToggle(this,'key')">PO No. First</button>
       </div>
       <div class="config-divider"></div>
-      <span class="config-label">Rows To Search</span>
+      <span class="config-label">Rows</span>
       <div class="toggle-group">
         <button class="toggle-opt active" onclick="setToggle(this,'rows')">Top 10</button>
         <button class="toggle-opt" onclick="setToggle(this,'rows')">Top 25</button>
@@ -405,11 +404,13 @@ tbody tr.row-matched td:first-child{border-left:3px solid var(--green);}
         <button class="toggle-opt" onclick="setToggle(this,'rows')">All</button>
       </div>
       <div class="config-divider"></div>
-      <span class="config-label">Search Key</span>
+      <!-- Filter chips -->
+      <span class="config-label">Filter</span>
       <div class="toggle-group">
-        <button class="toggle-opt active" onclick="setToggle(this,'key')">Both (Order + PO)</button>
-        <button class="toggle-opt" onclick="setToggle(this,'key')">Order No. Only</button>
-        <button class="toggle-opt" onclick="setToggle(this,'key')">PO No. Only</button>
+        <button class="toggle-opt active" onclick="setToggle(this,'filter')">All</button>
+        <button class="toggle-opt" onclick="setToggle(this,'filter')">Not Found</button>
+        <button class="toggle-opt" onclick="setToggle(this,'filter')">Found</button>
+        <button class="toggle-opt" onclick="setToggle(this,'filter')">Critical (&gt;180d)</button>
       </div>
       <button class="run-btn" id="run-recon-btn" onclick="runReconciliation()" disabled>▶ Run Reconciliation</button>
     </div>
@@ -432,17 +433,17 @@ tbody tr.row-matched td:first-child{border-left:3px solid var(--green);}
         <div class="sum-icon" style="background:var(--red-lt);">🔴</div>
         <div><div class="sum-val" style="color:var(--red);" id="sum-not-found">—</div><div class="sum-lbl">Not Found in OTM</div></div>
       </div>
-      <div class="sum-card hl-amber">
-        <div class="sum-icon" style="background:var(--amber-lt);">🟡</div>
-        <div><div class="sum-val" style="color:var(--amber);" id="sum-mismatch">—</div><div class="sum-lbl">Cost Mismatch</div></div>
-      </div>
       <div class="sum-card hl-green">
         <div class="sum-icon" style="background:var(--green-lt);">🟢</div>
-        <div><div class="sum-val" style="color:var(--green);" id="sum-matched">—</div><div class="sum-lbl">Matched Clean</div></div>
+        <div><div class="sum-val" style="color:var(--green);" id="sum-found">—</div><div class="sum-lbl">Found in OTM</div></div>
       </div>
       <div class="sum-card hl-orange">
         <div class="sum-icon" style="background:var(--orange-lt);">⚠️</div>
         <div><div class="sum-val" style="color:var(--orange);" id="sum-critical">—</div><div class="sum-lbl">Critical Aged (&gt;180 days)</div></div>
+      </div>
+      <div class="sum-card hl-amber">
+        <div class="sum-icon" style="background:var(--amber-lt);">📋</div>
+        <div><div class="sum-val" style="color:var(--amber);" id="sum-total">—</div><div class="sum-lbl">Total Rows Searched</div></div>
       </div>
     </div>
 
@@ -451,8 +452,22 @@ tbody tr.row-matched td:first-child{border-left:3px solid var(--green);}
       <div class="card-header">
         <span style="font-size:13px;">⚖️</span>
         <span class="card-title" id="ums-results-title">Reconciliation Results</span>
-        <div style="margin-left:auto;display:flex;gap:8px;">
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+          <!-- Search filter -->
+          <div class="input-group" style="width:180px;">
+            <span class="input-icon">🔎</span>
+            <input class="input" id="ums-filter-input" placeholder="Filter results..." oninput="filterUmsTable()" style="padding:5px 5px 5px 28px;font-size:11px;">
+          </div>
           <button class="btn-sm primary" onclick="exportUmsResults()">⬇ Export Excel</button>
+        </div>
+      </div>
+      <!-- Pagination info -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--border);background:var(--surface2);">
+        <span style="font-size:11px;color:var(--ink3);" id="ums-page-info">—</span>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button class="btn-sm" id="ums-prev-btn" onclick="umsChangePage(-1)" style="padding:3px 10px;">‹ Prev</button>
+          <span style="font-size:11px;font-weight:600;" id="ums-page-num">—</span>
+          <button class="btn-sm" id="ums-next-btn" onclick="umsChangePage(1)" style="padding:3px 10px;">Next ›</button>
         </div>
       </div>
       <div class="table-wrap">
@@ -460,18 +475,20 @@ tbody tr.row-matched td:first-child{border-left:3px solid var(--green);}
           <thead>
             <tr>
               <th style="width:28px;"></th>
-              <th>Age</th>
+              <th style="cursor:pointer;" onclick="umsSort('age')">Age ↕</th>
               <th class="ums-col">Document No.</th>
-              <th class="ums-col">Order No.</th>
+              <th class="ums-col" style="cursor:pointer;" onclick="umsSort('orderNumber')">Order No. ↕</th>
               <th class="ums-col">PO Number</th>
-              <th class="ums-col">Billed Amt</th>
+              <th class="ums-col">Supplier</th>
+              <th class="ums-col">Mode</th>
+              <th class="ums-col" style="cursor:pointer;" onclick="umsSort('billedAmount')">Billed Amt ↕</th>
               <th class="ums-col">Issue Date</th>
+              <th class="ums-col">Route</th>
               <th class="otm-col">OTM Match</th>
-              <th class="otm-col">OTM Shipment Id</th>
-              <th class="otm-col">OTM Cost</th>
-              <th class="diff-col">Cost Δ</th>
-              <th class="otm-col">BTF Status</th>
-              <th class="otm-col">FP Status</th>
+              <th class="otm-col">OTM Shipment</th>
+              <th class="otm-col">Carrier</th>
+              <th class="otm-col">BTF</th>
+              <th class="otm-col">USB</th>
               <th class="action-col">Actions</th>
             </tr>
           </thead>
@@ -828,9 +845,20 @@ function toggleBulkGroup(idx) {
 }
 
 // ── UMS RECONCILIATION ──
+
+// State
+let umsReconciledRows  = [];  // full reconciled dataset after run
+let umsDisplayRows     = [];  // after filter applied
+let umsCurrentPage     = 1;
+const UMS_PAGE_SIZE    = 50;
+let umsSortCol         = 'age';
+let umsSortDir         = -1;  // -1 = desc, 1 = asc
+
 function setToggle(el, group) {
   el.closest('.toggle-group').querySelectorAll('.toggle-opt').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
+  // If filter toggle changed, re-render current data
+  if (group === 'filter' && umsReconciledRows.length > 0) applyUmsFilter();
 }
 
 function handleFileUpload(input) {
@@ -843,7 +871,6 @@ function handleFileUpload(input) {
   document.getElementById('upload-sub').textContent = `${(file.size/1024).toFixed(0)} KB · Ready to process`;
   document.getElementById('upload-actions').innerHTML = `<button class="btn-sm" onclick="event.stopPropagation();resetUpload()">↺ Replace</button>`;
   document.getElementById('run-recon-btn').disabled = false;
-  // Store file reference for processing
   window._umsFile = file;
 }
 
@@ -852,129 +879,23 @@ function resetUpload() {
   zone.classList.remove('has-file');
   document.getElementById('upload-icon').textContent = '📂';
   document.getElementById('upload-title').textContent = 'Drop UMS sheet here or click to upload';
-  document.getElementById('upload-sub').textContent = 'Accepts .xlsx or .csv · Columns A–AM expected';
+  document.getElementById('upload-sub').textContent = 'Accepts .xlsx · 40 columns expected (A–AN)';
   document.getElementById('upload-actions').innerHTML = '';
   document.getElementById('run-recon-btn').disabled = true;
   document.getElementById('ums-summary').style.display = 'none';
   document.getElementById('ums-results-card').style.display = 'none';
   document.getElementById('ums-empty').style.display = 'block';
+  document.getElementById('ums-filter-input').value = '';
   document.getElementById('ums-file-input').value = '';
   window._umsFile = null;
   umsRows = [];
+  umsReconciledRows = [];
+  umsDisplayRows = [];
 }
 
-async function runReconciliation() {
-  if (!window._umsFile) { showToast('Please upload a UMS file first', 'err'); return; }
-
-  const sortMode = document.querySelector('.toggle-group .toggle-opt.active[onclick*="sort"]')?.textContent || '';
-  const rowsMode = document.querySelector('.toggle-group .toggle-opt.active[onclick*="rows"]')?.textContent || 'Top 10';
-  const rowLimit = rowsMode.includes('10') ? 10 : rowsMode.includes('25') ? 25 : rowsMode.includes('50') ? 50 : 9999;
-
-  document.getElementById('ums-empty').style.display = 'none';
-  document.getElementById('ums-summary').style.display = 'none';
-  document.getElementById('ums-results-card').style.display = 'none';
-  document.getElementById('run-recon-btn').disabled = true;
-
-  // Show progress
-  const progressWrap = document.getElementById('ums-progress');
-  progressWrap.classList.add('visible');
-
-  try {
-    // Parse file
-    document.getElementById('ums-progress-label').textContent = '📂 Parsing UMS file...';
-    const rows = await parseUmsFile(window._umsFile);
-    if (!rows || rows.length === 0) throw new Error('No data rows found in file.');
-
-    // Sort
-    let sorted = [...rows];
-    if (sortMode.includes('Age')) {
-      sorted.sort((a, b) => (b.age || 0) - (a.age || 0));
-    } else if (sortMode.includes('Financial')) {
-      sorted.sort((a, b) => new Date(b.financialStatusDate) - new Date(a.financialStatusDate));
-    }
-    const selected = sorted.slice(0, rowLimit);
-
-    // Search OTM in batches of 100
-    const searchKey = document.querySelector('.toggle-group .toggle-opt.active[onclick*="key"]')?.textContent || '';
-    const useOrder = !searchKey.includes('PO No. Only');
-    const usePO    = !searchKey.includes('Order No. Only');
-
-    const searchValues = [...new Set(selected.flatMap(r => {
-      const vals = [];
-      if (useOrder && r.orderNumber) vals.push(r.orderNumber);
-      if (usePO && r.poNumber && r.poNumber !== 'NS') vals.push(r.poNumber);
-      return vals;
-    }))];
-
-    const BATCH_SIZE = 100;
-    const batches = [];
-    for (let i = 0; i < searchValues.length; i += BATCH_SIZE) {
-      batches.push(searchValues.slice(i, i + BATCH_SIZE));
-    }
-
-    // Build steps UI
-    const stepsEl = document.getElementById('ums-progress-steps');
-    stepsEl.innerHTML = batches.map((_, i) =>
-      `<span class="progress-step pending" id="ums-step-${i}">Batch ${i+1}</span>`
-    ).join('');
-
-    // Execute batches
-    const otmMap = {};
-    for (let i = 0; i < batches.length; i++) {
-      document.getElementById('ums-progress-label').textContent = `🔄 Searching OTM — Batch ${i+1} of ${batches.length}`;
-      document.getElementById('ums-progress-count').textContent = `${i * BATCH_SIZE} / ${searchValues.length} values`;
-      document.getElementById(`ums-step-${i}`).className = 'progress-step active';
-      const pct = Math.round((i / batches.length) * 100);
-      document.getElementById('ums-progress-fill').style.width = pct + '%';
-
-      const resp = await fetch(`${API}/api/bulk-search`, {
-        method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: batches[i].join(',')
-      });
-      const data = await resp.json();
-      data.results.forEach(group => {
-        if (group.items && group.items.length > 0) {
-          otmMap[group.searchValue] = group.items[0]; // take first match
-        }
-      });
-      document.getElementById(`ums-step-${i}`).className = 'progress-step done';
-      if (i < batches.length - 1) document.getElementById(`ums-step-${i+1}`).className = 'progress-step active';
-    }
-
-    document.getElementById('ums-progress-fill').style.width = '100%';
-    document.getElementById('ums-progress-label').textContent = '✅ Reconciliation complete';
-    document.getElementById('ums-progress-count').textContent = `${selected.length} / ${selected.length}`;
-
-    // Reconcile
-    const reconciled = selected.map(row => {
-      const orderMatch = otmMap[row.orderNumber];
-      const poMatch    = otmMap[row.poNumber];
-      const otmShipment = orderMatch || poMatch || null;
-      let matchStatus = 'not_found';
-      let costDelta = null;
-      if (otmShipment) {
-        const otmCost = otmShipment.totalActualCost;
-        if (otmCost !== null && otmCost !== undefined && row.billedAmount !== null) {
-          costDelta = row.billedAmount - otmCost;
-          matchStatus = Math.abs(costDelta) < 0.01 ? 'matched' : 'mismatch';
-        } else {
-          matchStatus = 'mismatch';
-          costDelta = row.billedAmount;
-        }
-      }
-      return { ...row, otmShipment, matchStatus, costDelta };
-    });
-
-    renderUmsResults(reconciled);
-  } catch (err) {
-    showToast(`❌ Error: ${err.message}`, 'err');
-  } finally {
-    document.getElementById('run-recon-btn').disabled = false;
-    setTimeout(() => progressWrap.classList.remove('visible'), 2000);
-  }
-}
-
+// ── PARSE XLSX ──
 async function parseUmsFile(file) {
-  // Load SheetJS dynamically if not already present
+  // Load SheetJS if needed
   if (typeof XLSX === 'undefined') {
     await new Promise((res, rej) => {
       const s = document.createElement('script');
@@ -983,138 +904,342 @@ async function parseUmsFile(file) {
       document.head.appendChild(s);
     });
   }
-
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const isXlsx = file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.xls');
+        const data     = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+        const sheet    = workbook.Sheets[workbook.SheetNames[0]];
+        const raw      = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+        if (raw.length < 2) { resolve([]); return; }
 
-        if (isXlsx) {
-          // ── XLSX path via SheetJS ──
-          const data    = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-          const sheet   = workbook.Sheets[workbook.SheetNames[0]];
-          // Get raw rows as arrays (no header inference — positional column mapping)
-          const raw = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-          if (raw.length < 2) { resolve([]); return; }
+        // Column indices confirmed from actual file inspection:
+        // [0]=Note [1]=Document Number [2]=Order Number [3]=Financial Status Date
+        // [4]=Financial Status [5]=Age By Issue Date [6]=Attachment [7]=PO Number
+        // [8]=Ship From City [9]=Ship To City [10]=Invoice Due Date [11]=Supplier
+        // [12]=Buyer's ID For Supplier [13]=Issue Date [14]=Buyer [15]=Buyer ID
+        // [16]=Billed Amount [17]=Note Code [18]=Note [19]=Last Note Author
+        // [20]=Customer Name [26]=Mode [29]=Ship From Name [33]=Ship To Name
 
-          // Log header row to console for debugging column positions
-          console.log('UMS Headers:', raw[0]);
+        const fmtDate = (v) => {
+          if (!v) return '';
+          if (v instanceof Date) return v.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+          return String(v).trim();
+        };
 
-          const rows = raw.slice(1).map(cols => {
-            const documentNumber      = String(cols[0]  ?? '').trim();
-            const orderNumber         = String(cols[1]  ?? '').trim();
-            const financialStatusDate = String(cols[2]  ?? '').trim();
-            const financialStatus     = String(cols[3]  ?? '').trim();
-            const ageRaw              = cols[4];
-            const age                 = typeof ageRaw === 'number' ? ageRaw : parseInt(ageRaw) || 0;
-            const poNumber            = String(cols[6]  ?? '').trim();
-            const issueDate           = String(cols[12] ?? '').trim();
-            const billedRaw           = cols[14];
-            const billedAmount        = typeof billedRaw === 'number' ? billedRaw : parseFloat(billedRaw) || null;
-            return { documentNumber, orderNumber, financialStatusDate, financialStatus, age, poNumber, billedAmount, issueDate };
-          }).filter(r => r.documentNumber && r.documentNumber !== '');
+        const rows = raw.slice(1).map(cols => {
+          const docNum  = String(cols[1]  ?? '').trim();
+          const orderNo = String(cols[2]  ?? '').trim();
+          const age     = typeof cols[5] === 'number' ? cols[5] : parseInt(cols[5]) || 0;
+          const poNum   = String(cols[7]  ?? '').trim();
+          const supplier= String(cols[11] ?? '').trim();
+          const issueDate = fmtDate(cols[13]);
+          const billed  = typeof cols[16] === 'number' ? cols[16] : parseFloat(cols[16]) || null;
+          const noteCode= String(cols[17] ?? '').trim();
+          const note    = String(cols[18] ?? '').trim();
+          const lastNoteAuthor = String(cols[19] ?? '').trim();
+          const mode    = String(cols[26] ?? '').trim();
+          const shipFromName = String(cols[29] ?? '').trim();
+          const shipFromCity = String(cols[8]  ?? '').trim();
+          const shipFromState= String(cols[31] ?? '').trim();
+          const shipToName   = String(cols[33] ?? '').trim();
+          const shipToCity   = String(cols[9]  ?? '').trim();
+          const shipToState  = String(cols[36] ?? '').trim();
+          const invoiceDueDate = fmtDate(cols[10]);
+          const attachment  = String(cols[6]  ?? '').trim();
+          const financialStatusDate = fmtDate(cols[3]);
 
-          resolve(rows);
-        } else {
-          // ── CSV fallback ──
-          const text  = e.target.result;
-          const lines = text.split('\n').filter(l => l.trim());
-          if (lines.length < 2) { resolve([]); return; }
-          const delim = lines[0].includes('\t') ? '\t' : ',';
-          const rows  = lines.slice(1).map(line => {
-            const cols = line.split(delim).map(c => c.trim().replace(/^"|"$/g, ''));
-            return {
-              documentNumber:      cols[0]  || '',
-              orderNumber:         cols[1]  || '',
-              financialStatusDate: cols[2]  || '',
-              financialStatus:     cols[3]  || '',
-              age:                 parseInt(cols[4]) || 0,
-              poNumber:            cols[6]  || '',
-              billedAmount:        parseFloat(cols[14]) || null,
-              issueDate:           cols[12] || '',
-            };
-          }).filter(r => r.documentNumber);
-          resolve(rows);
-        }
+          return {
+            documentNumber: docNum,
+            orderNumber:    orderNo,
+            poNumber:       poNum,
+            age,
+            supplier,
+            issueDate,
+            billedAmount:   billed,
+            noteCode,
+            note,
+            lastNoteAuthor,
+            mode,
+            shipFromName, shipFromCity, shipFromState,
+            shipToName,   shipToCity,   shipToState,
+            invoiceDueDate,
+            attachment,
+            financialStatusDate,
+          };
+        }).filter(r => r.documentNumber !== '');
+
+        resolve(rows);
       } catch(err) { reject(err); }
     };
     reader.onerror = reject;
-    // Use ArrayBuffer for xlsx, text for csv
-    if (file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.xls')) {
-      reader.readAsArrayBuffer(file);
-    } else {
-      reader.readAsText(file);
-    }
+    reader.readAsArrayBuffer(file);
   });
 }
 
-function renderUmsResults(rows) {
-  // Summary counts
-  const notFound = rows.filter(r => r.matchStatus === 'not_found').length;
-  const mismatch = rows.filter(r => r.matchStatus === 'mismatch').length;
-  const matched  = rows.filter(r => r.matchStatus === 'matched').length;
-  const critical = rows.filter(r => r.age > 180).length;
+// ── RUN RECONCILIATION ──
+async function runReconciliation() {
+  if (!window._umsFile) { showToast('Please upload a UMS file first', 'err'); return; }
 
-  document.getElementById('sum-not-found').textContent = notFound;
-  document.getElementById('sum-mismatch').textContent  = mismatch;
-  document.getElementById('sum-matched').textContent   = matched;
-  document.getElementById('sum-critical').textContent  = critical;
-  document.getElementById('ums-summary').style.display = 'grid';
+  const rowsMode = document.querySelector('.toggle-group .toggle-opt.active[onclick*="rows"]')?.textContent || 'Top 10';
+  const rowLimit = rowsMode.includes('10') ? 10 : rowsMode.includes('25') ? 25 : rowsMode.includes('50') ? 50 : 999999;
+  const keyMode  = document.getElementById('key-order')?.classList.contains('active') ? 'order' : 'po';
 
-  document.getElementById('ums-results-title').textContent =
-    `Reconciliation Results — ${rows.length} rows`;
+  document.getElementById('ums-empty').style.display = 'none';
+  document.getElementById('ums-summary').style.display = 'none';
+  document.getElementById('ums-results-card').style.display = 'none';
+  document.getElementById('run-recon-btn').disabled = true;
 
-  const tbody = document.getElementById('ums-results-body');
-  tbody.innerHTML = rows.map((row, idx) => {
-    const ageCls = row.age > 180 ? 'age-critical' : row.age > 90 ? 'age-warn' : 'age-ok';
-    const rowCls = row.matchStatus === 'not_found' ? 'row-not-found'
-                 : row.matchStatus === 'mismatch'  ? 'row-mismatch'
-                 : 'row-matched';
-    const matchChip = row.matchStatus === 'not_found'
-      ? `<span class="chip chip-red">✗ Not Found</span>`
-      : row.matchStatus === 'mismatch'
-      ? `<span class="chip chip-amber">⚠ Mismatch</span>`
-      : `<span class="chip chip-green">✓ Matched</span>`;
+  const progressWrap = document.getElementById('ums-progress');
+  progressWrap.classList.add('visible');
 
-    const otmXid = row.otmShipment ? `<span class="mono" style="color:var(--teal);font-weight:600;">${row.otmShipment.shipmentXid||'—'}</span>` : `<span class="st-null">—</span>`;
-    const otmCost = row.otmShipment && row.otmShipment.totalActualCost != null
-      ? `$${Number(row.otmShipment.totalActualCost).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`
-      : '—';
-    const billedFmt = row.billedAmount != null
-      ? `$${Number(row.billedAmount).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}` : '—';
-    const deltaTd = row.costDelta != null
-      ? `<td style="font-weight:700;color:${Math.abs(row.costDelta)<0.01?'var(--green)':row.costDelta>0?'var(--amber)':'var(--red)'};">
-          ${Math.abs(row.costDelta)<0.01?'$0.00':(row.costDelta>0?'+':'')+'$'+Math.abs(row.costDelta).toFixed(2)}
-        </td>`
-      : `<td class="st-null">—</td>`;
+  try {
+    // 1. Parse
+    document.getElementById('ums-progress-label').textContent = '📂 Parsing UMS file...';
+    document.getElementById('ums-progress-fill').style.width = '5%';
+    const rows = await parseUmsFile(window._umsFile);
+    if (!rows || rows.length === 0) throw new Error('No data rows found in file.');
 
-    const st = row.otmShipment?.statuses || {};
-    const btfVal = st.BTF_RATE_IND?.value || '';
-    const btfTd  = row.otmShipment ? stCell(btfVal) : `<td class="st-null">—</td>`;
-    const fpTd   = row.otmShipment ? fpStatusCell(row.otmShipment.shipmentAsWork, row.otmShipment.attribute10) : `<td class="st-null">—</td>`;
+    // 2. Sort by age descending always
+    const sorted   = [...rows].sort((a, b) => (b.age || 0) - (a.age || 0));
+    const selected = sorted.slice(0, rowLimit);
 
-    let actionTd = `<td><button class="btn-sm" style="font-size:10px;" onclick="searchFromUms('${row.orderNumber}','${row.poNumber}')">🔍 Lookup</button></td>`;
-    if (row.otmShipment) {
-      actionTd = `<td>${actionCell(row.otmShipment).replace('<td>','').replace('</td>','')}</td>`;
+    // 3. Build unique search values
+    //    Primary: Order Number. Fallback: PO Number (skip if blank or 'Multiple')
+    //    We collect BOTH so we can do fallback matching in reconcile step,
+    //    but we search them all at once to minimise API round-trips.
+    const primaryKey = keyMode === 'order' ? 'orderNumber' : 'poNumber';
+    const fallbackKey= keyMode === 'order' ? 'poNumber'    : 'orderNumber';
+
+    const searchSet = new Set();
+    selected.forEach(r => {
+      const primary = r[primaryKey];
+      if (primary && primary !== 'Multiple') searchSet.add(String(primary));
+      const fallback = r[fallbackKey];
+      if (fallback && fallback !== 'Multiple') searchSet.add(String(fallback));
+    });
+    const searchValues = [...searchSet];
+
+    // 4. Batch OTM searches (100 per batch)
+    const BATCH_SIZE = 100;
+    const batches = [];
+    for (let i = 0; i < searchValues.length; i += BATCH_SIZE)
+      batches.push(searchValues.slice(i, i + BATCH_SIZE));
+
+    const stepsEl = document.getElementById('ums-progress-steps');
+    stepsEl.innerHTML = batches.map((_, i) =>
+      `<span class="progress-step pending" id="ums-step-${i}">Batch ${i+1}</span>`
+    ).join('');
+
+    const otmMap = {};   // searchValue → best OTM shipment (prefer FP shipment)
+    for (let i = 0; i < batches.length; i++) {
+      document.getElementById('ums-progress-label').textContent =
+        `🔄 Searching OTM — Batch ${i+1} of ${batches.length}`;
+      document.getElementById('ums-progress-count').textContent =
+        `${Math.min((i+1)*BATCH_SIZE, searchValues.length)} / ${searchValues.length} values`;
+      document.getElementById(`ums-step-${i}`).className = 'progress-step active';
+      document.getElementById('ums-progress-fill').style.width =
+        Math.round(10 + (i / batches.length) * 85) + '%';
+
+      const resp = await fetch(`${API}/api/bulk-search`, {
+        method: 'POST', headers: { 'Content-Type': 'text/plain' },
+        body: batches[i].join(',')
+      });
+      if (!resp.ok) throw new Error(`OTM API error: HTTP ${resp.status}`);
+      const data = await resp.json();
+
+      data.results.forEach(group => {
+        if (!group.items || group.items.length === 0) return;
+        // Prefer FP (ActualShipment) over TOC shipment
+        const fp  = group.items.find(s => s.shipmentAsWork);
+        const best = fp || group.items[0];
+        otmMap[group.searchValue] = best;
+      });
+
+      document.getElementById(`ums-step-${i}`).className = 'progress-step done';
     }
 
-    return `<tr class="${rowCls}" id="ums-row-${idx}">
-      <td><button class="expand-btn" onclick="toggleUmsExpand(${idx})">▶</button></td>
+    document.getElementById('ums-progress-fill').style.width = '100%';
+    document.getElementById('ums-progress-label').textContent = '✅ Reconciliation complete';
+    document.getElementById('ums-progress-count').textContent =
+      `${selected.length} rows processed`;
+
+    // 5. Reconcile each row
+    const reconciled = selected.map(row => {
+      const primaryVal  = row[primaryKey]  ? String(row[primaryKey])  : null;
+      const fallbackVal = row[fallbackKey] ? String(row[fallbackKey]) : null;
+
+      // Try primary key first
+      let otmShipment = null;
+      let matchedBy   = null;
+
+      if (primaryVal && primaryVal !== 'Multiple') {
+        otmShipment = otmMap[primaryVal] || null;
+        if (otmShipment) matchedBy = primaryKey;
+      }
+      // Fallback to secondary key if primary didn't find anything
+      if (!otmShipment && fallbackVal && fallbackVal !== 'Multiple') {
+        otmShipment = otmMap[fallbackVal] || null;
+        if (otmShipment) matchedBy = fallbackKey;
+      }
+
+      const matchStatus = otmShipment ? 'found' : 'not_found';
+      return { ...row, otmShipment, matchStatus, matchedBy };
+    });
+
+    umsReconciledRows = reconciled;
+    renderUmsSummary(reconciled);
+    applyUmsFilter();
+
+  } catch (err) {
+    showToast(`❌ Error: ${err.message}`, 'err');
+    console.error(err);
+  } finally {
+    document.getElementById('run-recon-btn').disabled = false;
+    setTimeout(() => progressWrap.classList.remove('visible'), 2500);
+  }
+}
+
+// ── SUMMARY CARDS ──
+function renderUmsSummary(rows) {
+  const notFound = rows.filter(r => r.matchStatus === 'not_found').length;
+  const found    = rows.filter(r => r.matchStatus === 'found').length;
+  const critical = rows.filter(r => r.age > 180).length;
+  document.getElementById('sum-not-found').textContent = notFound;
+  document.getElementById('sum-found').textContent     = found;
+  document.getElementById('sum-critical').textContent  = critical;
+  document.getElementById('sum-total').textContent     = rows.length;
+  document.getElementById('ums-summary').style.display = 'grid';
+}
+
+// ── FILTER ──
+function applyUmsFilter() {
+  const filterBtn  = document.querySelector('.toggle-group .toggle-opt.active[onclick*="filter"]')?.textContent || 'All';
+  const textFilter = (document.getElementById('ums-filter-input')?.value || '').toLowerCase().trim();
+
+  let rows = [...umsReconciledRows];
+
+  if (filterBtn.includes('Not Found'))   rows = rows.filter(r => r.matchStatus === 'not_found');
+  else if (filterBtn.includes('Found'))  rows = rows.filter(r => r.matchStatus === 'found');
+  else if (filterBtn.includes('Critical')) rows = rows.filter(r => r.age > 180);
+
+  if (textFilter) {
+    rows = rows.filter(r =>
+      (r.documentNumber || '').toLowerCase().includes(textFilter) ||
+      (r.orderNumber    || '').toLowerCase().includes(textFilter) ||
+      (r.poNumber       || '').toLowerCase().includes(textFilter) ||
+      (r.supplier       || '').toLowerCase().includes(textFilter) ||
+      (r.shipFromName   || '').toLowerCase().includes(textFilter) ||
+      (r.shipToName     || '').toLowerCase().includes(textFilter)
+    );
+  }
+
+  umsDisplayRows = rows;
+  umsCurrentPage = 1;
+  renderUmsTable();
+}
+
+function filterUmsTable() {
+  if (umsReconciledRows.length > 0) applyUmsFilter();
+}
+
+// ── SORT ──
+function umsSort(col) {
+  if (umsSortCol === col) umsSortDir *= -1;
+  else { umsSortCol = col; umsSortDir = -1; }
+  umsDisplayRows.sort((a, b) => {
+    const av = a[col] ?? '';
+    const bv = b[col] ?? '';
+    if (typeof av === 'number') return (av - bv) * umsSortDir;
+    return String(av).localeCompare(String(bv)) * umsSortDir;
+  });
+  umsCurrentPage = 1;
+  renderUmsTable();
+}
+
+// ── PAGINATION ──
+function umsChangePage(dir) {
+  const totalPages = Math.ceil(umsDisplayRows.length / UMS_PAGE_SIZE);
+  umsCurrentPage = Math.max(1, Math.min(totalPages, umsCurrentPage + dir));
+  renderUmsTable();
+}
+
+// ── RENDER TABLE ──
+function renderUmsTable() {
+  const totalPages = Math.max(1, Math.ceil(umsDisplayRows.length / UMS_PAGE_SIZE));
+  const start      = (umsCurrentPage - 1) * UMS_PAGE_SIZE;
+  const pageRows   = umsDisplayRows.slice(start, start + UMS_PAGE_SIZE);
+
+  document.getElementById('ums-results-title').textContent =
+    `Reconciliation Results — ${umsDisplayRows.length} rows`;
+  document.getElementById('ums-page-info').textContent =
+    `Showing ${start + 1}–${Math.min(start + UMS_PAGE_SIZE, umsDisplayRows.length)} of ${umsDisplayRows.length}`;
+  document.getElementById('ums-page-num').textContent  = `Page ${umsCurrentPage} / ${totalPages}`;
+  document.getElementById('ums-prev-btn').disabled     = umsCurrentPage <= 1;
+  document.getElementById('ums-next-btn').disabled     = umsCurrentPage >= totalPages;
+
+  const tbody = document.getElementById('ums-results-body');
+  tbody.innerHTML = pageRows.map((row, i) => {
+    const globalIdx = start + i;
+    const ageCls    = row.age > 180 ? 'age-critical' : row.age > 90 ? 'age-warn' : 'age-ok';
+    const rowCls    = row.matchStatus === 'not_found' ? 'row-not-found' : 'row-matched';
+
+    const matchChip = row.matchStatus === 'not_found'
+      ? `<span class="chip chip-red">✗ Not Found</span>`
+      : `<span class="chip chip-green">✓ Found</span>`;
+
+    const otmShip = row.otmShipment;
+    const otmXid  = otmShip
+      ? `<span class="mono" style="color:var(--teal);font-weight:600;font-size:10px;">${otmShip.shipmentXid||'—'}</span>`
+      : `<span class="st st-null">—</span>`;
+    const otmCarrier = otmShip ? (otmShip.carrier || '—') : '—';
+
+    const billedFmt = row.billedAmount != null
+      ? `$${Number(row.billedAmount).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}` : '—';
+
+    const modeShort = (row.mode||'').replace('Truck Load','TL').replace('Less Than Truckload','LTL')
+      .replace('Intermodal','IM').replace('Rail','RAIL').replace('Air Freight','AIR')
+      .replace('Containerized Ocean','OCEAN');
+    const modeCls = modeShort === 'TL' ? 'chip-gray' : modeShort === 'LTL' ? 'chip-blue'
+      : modeShort === 'AIR' ? 'chip-purple' : modeShort === 'OCEAN' ? 'chip-teal' : 'chip-amber';
+
+    const st     = otmShip?.statuses || {};
+    const btfVal = st.BTF_RATE_IND?.value || '';
+    const usbVal = st.SENT_TO_USB?.value  || '';
+    const btfTd  = otmShip ? stCell(btfVal, null, null) : `<td><span class="st st-null">—</span></td>`;
+    const usbTd  = otmShip ? stCell(usbVal, null, null) : `<td><span class="st st-null">—</span></td>`;
+
+    // Action: if found → show OTM actions; if not found → lookup button
+    let actionTd;
+    if (otmShip) {
+      actionTd = actionCell(otmShip, [otmShip]);
+    } else {
+      const safeOrder = String(row.orderNumber||'').replace(/'/g,"\\'");
+      const safePO    = String(row.poNumber||'').replace(/'/g,"\\'");
+      actionTd = `<td><button class="btn-sm" style="font-size:10px;" onclick="searchFromUms('${safeOrder}','${safePO}')">🔍 Lookup</button></td>`;
+    }
+
+    const route = `${row.shipFromCity||'?'}${row.shipFromState?' ('+row.shipFromState+')':''} → ${row.shipToCity||'?'}${row.shipToState?' ('+row.shipToState+')':''}`;
+
+    return `<tr class="${rowCls}" id="ums-row-${globalIdx}">
+      <td><button class="expand-btn" onclick="toggleUmsExpand(${globalIdx})">▶</button></td>
       <td><span class="age-badge ${ageCls}">${row.age}d</span></td>
-      <td class="mono" style="color:var(--blue);font-weight:600;">${row.documentNumber||'—'}</td>
-      <td class="mono">${row.orderNumber||'—'}</td>
-      <td class="mono">${row.poNumber||'—'}</td>
+      <td class="mono" style="color:var(--blue);font-weight:600;font-size:10px;">${row.documentNumber||'—'}</td>
+      <td class="mono" style="font-size:10px;">${row.orderNumber||'—'}</td>
+      <td class="mono" style="font-size:10px;">${row.poNumber||'—'}</td>
+      <td style="font-size:10px;max-width:120px;overflow:hidden;text-overflow:ellipsis;" title="${row.supplier||''}">${row.supplier||'—'}</td>
+      <td><span class="chip ${modeCls}">${modeShort||'—'}</span></td>
       <td style="font-weight:600;">${billedFmt}</td>
-      <td style="color:var(--ink3);">${row.issueDate||'—'}</td>
+      <td style="color:var(--ink3);font-size:10px;">${row.issueDate||'—'}</td>
+      <td style="font-size:10px;color:var(--ink3);max-width:140px;overflow:hidden;text-overflow:ellipsis;" title="${route}">${route}</td>
       <td>${matchChip}</td>
       <td>${otmXid}</td>
-      <td style="font-weight:600;color:var(--teal);">${otmCost}</td>
-      ${deltaTd}${btfTd}${fpTd}${actionTd}
+      <td style="font-size:10px;">${otmCarrier}</td>
+      ${btfTd}${usbTd}${actionTd}
     </tr>
-    <tr class="row-expanded-detail" id="ums-expand-${idx}" style="display:none;">
-      <td colspan="14">${buildUmsExpandPanel(row)}</td>
+    <tr class="row-expanded-detail" id="ums-expand-${globalIdx}" style="display:none;">
+      <td colspan="16">${buildUmsExpandPanel(row)}</td>
     </tr>`;
   }).join('');
 
@@ -1122,62 +1247,103 @@ function renderUmsResults(rows) {
   document.getElementById('ums-empty').style.display = 'none';
 }
 
+// ── EXPAND PANEL ──
 function buildUmsExpandPanel(row) {
   const otm = row.otmShipment;
-  const otmSection = otm ? `
+
+  const umsFields = `
     <div class="expand-grid">
-      <div class="expand-field"><div class="expand-field-label">Shipment Id</div><div class="expand-field-val">${otm.shipmentXid||'—'}</div></div>
-      <div class="expand-field"><div class="expand-field-label">Carrier</div><div class="expand-field-val">${otm.carrier||'—'}</div></div>
-      <div class="expand-field ${row.costDelta && Math.abs(row.costDelta)>0.01?'diff':''}">
-        <div class="expand-field-label">OTM Cost${row.costDelta && Math.abs(row.costDelta)>0.01?' ⚠':''}</div>
-        <div class="expand-field-val">$${Number(otm.totalActualCost||0).toFixed(2)}</div>
-      </div>
-      <div class="expand-field"><div class="expand-field-label">Transport Mode</div><div class="expand-field-val">${otm.transportMode||'—'}</div></div>
-      <div class="expand-field"><div class="expand-field-label">BTF Pricing</div><div class="expand-field-val">${otm.statuses?.BTF_RATE_IND?.value||'—'}</div></div>
-      <div class="expand-field"><div class="expand-field-label">USB Status</div><div class="expand-field-val">${otm.statuses?.SENT_TO_USB?.value||'—'}</div></div>
-    </div>` : `<div style="background:var(--red-lt);border:1px solid #fca5a5;border-radius:8px;padding:12px;text-align:center;color:var(--red);font-size:12px;font-weight:600;">
-      ✗ No shipment found in OTM for Order No. <strong>${row.orderNumber}</strong> or PO <strong>${row.poNumber}</strong>
+      <div class="expand-field"><div class="expand-field-label">Document No.</div><div class="expand-field-val">${row.documentNumber||'—'}</div></div>
+      <div class="expand-field"><div class="expand-field-label">Order No.</div><div class="expand-field-val">${row.orderNumber||'—'}</div></div>
+      <div class="expand-field"><div class="expand-field-label">PO Number</div><div class="expand-field-val">${row.poNumber||'—'}</div></div>
+      <div class="expand-field"><div class="expand-field-label">Billed Amount</div><div class="expand-field-val">${row.billedAmount != null ? '$'+Number(row.billedAmount).toFixed(2) : '—'}</div></div>
+      <div class="expand-field"><div class="expand-field-label">Issue Date</div><div class="expand-field-val">${row.issueDate||'—'}</div></div>
+      <div class="expand-field"><div class="expand-field-label">Invoice Due</div><div class="expand-field-val">${row.invoiceDueDate||'—'}</div></div>
+      <div class="expand-field"><div class="expand-field-label">Supplier</div><div class="expand-field-val">${row.supplier||'—'}</div></div>
+      <div class="expand-field"><div class="expand-field-label">Mode</div><div class="expand-field-val">${row.mode||'—'}</div></div>
+      <div class="expand-field"><div class="expand-field-label">Ship From</div><div class="expand-field-val">${row.shipFromName||'—'}, ${row.shipFromCity||''} ${row.shipFromState||''}</div></div>
+      <div class="expand-field"><div class="expand-field-label">Ship To</div><div class="expand-field-val">${row.shipToName||'—'}, ${row.shipToCity||''} ${row.shipToState||''}</div></div>
+      ${row.noteCode ? `<div class="expand-field"><div class="expand-field-label">Note Code</div><div class="expand-field-val">${row.noteCode}</div></div>` : ''}
+      ${row.note ? `<div class="expand-field" style="grid-column:1/-1;"><div class="expand-field-label">Note</div><div class="expand-field-val" style="white-space:normal;">${row.note}</div></div>` : ''}
     </div>`;
 
+  const otmSection = otm
+    ? `<div class="expand-grid">
+        <div class="expand-field"><div class="expand-field-label">Shipment Id</div><div class="expand-field-val">${otm.shipmentXid||'—'}</div></div>
+        <div class="expand-field"><div class="expand-field-label">Shipment Name</div><div class="expand-field-val">${otm.shipmentName||'—'}</div></div>
+        <div class="expand-field"><div class="expand-field-label">Carrier</div><div class="expand-field-val">${otm.carrier||'—'}</div></div>
+        <div class="expand-field"><div class="expand-field-label">Transport Mode</div><div class="expand-field-val">${otm.transportMode||'—'}</div></div>
+        <div class="expand-field"><div class="expand-field-label">OTM Cost</div><div class="expand-field-val">${otm.totalActualCost != null ? '$'+Number(otm.totalActualCost).toFixed(2) : '—'}</div></div>
+        <div class="expand-field"><div class="expand-field-label">Type</div><div class="expand-field-val">${otm.shipmentAsWork ? 'FP (ActualShipment)' : 'TOC (Planned)'}</div></div>
+        <div class="expand-field"><div class="expand-field-label">BTF Eligible</div><div class="expand-field-val">${otm.statuses?.BTF_SHIP_IND?.value||'—'}</div></div>
+        <div class="expand-field"><div class="expand-field-label">BTF Pricing</div><div class="expand-field-val">${otm.statuses?.BTF_RATE_IND?.value||'—'}</div></div>
+        <div class="expand-field"><div class="expand-field-label">USB Status</div><div class="expand-field-val">${otm.statuses?.SENT_TO_USB?.value||'—'}</div></div>
+        <div class="expand-field"><div class="expand-field-label">Matched By</div><div class="expand-field-val" style="color:var(--teal);">${row.matchedBy === 'orderNumber' ? 'Order No.' : row.matchedBy === 'poNumber' ? 'PO No.' : '—'}</div></div>
+        <div class="expand-field"><div class="expand-field-label">Origin</div><div class="expand-field-val">${otm.sourceLocation||'—'}</div></div>
+        <div class="expand-field"><div class="expand-field-label">Destination</div><div class="expand-field-val">${otm.destLocation||'—'}</div></div>
+      </div>`
+    : `<div style="background:var(--red-lt);border:1px solid #fca5a5;border-radius:8px;padding:12px;color:var(--red);font-size:12px;font-weight:600;">
+        ✗ No shipment found in OTM for Order No. <strong>${row.orderNumber||'—'}</strong>${row.poNumber && row.poNumber !== 'Multiple' ? ` or PO <strong>${row.poNumber}</strong>` : ''}
+      </div>`;
+
   return `<div class="expand-panel">
-    <div class="expand-section">
-      <h4 class="ums">📄 UMS Sheet Data</h4>
-      <div class="expand-grid">
-        <div class="expand-field"><div class="expand-field-label">Document No.</div><div class="expand-field-val">${row.documentNumber}</div></div>
-        <div class="expand-field"><div class="expand-field-label">Order No.</div><div class="expand-field-val">${row.orderNumber}</div></div>
-        <div class="expand-field"><div class="expand-field-label">PO Number</div><div class="expand-field-val">${row.poNumber}</div></div>
-        <div class="expand-field ${row.costDelta && Math.abs(row.costDelta)>0.01?'diff':''}">
-          <div class="expand-field-label">Billed Amount${row.costDelta && Math.abs(row.costDelta)>0.01?' ⚠':''}</div>
-          <div class="expand-field-val">$${Number(row.billedAmount||0).toFixed(2)}</div>
-        </div>
-        <div class="expand-field"><div class="expand-field-label">Issue Date</div><div class="expand-field-val">${row.issueDate}</div></div>
-        <div class="expand-field"><div class="expand-field-label">Age (Days)</div><div class="expand-field-val">${row.age}</div></div>
-      </div>
-    </div>
-    <div class="expand-section">
-      <h4 class="otm">🔗 OTM Data</h4>
-      ${otmSection}
-    </div>
+    <div class="expand-section"><h4 class="ums">📄 UMS Sheet Data</h4>${umsFields}</div>
+    <div class="expand-section"><h4 class="otm">🔗 OTM Data</h4>${otmSection}</div>
   </div>`;
 }
 
 function toggleUmsExpand(idx) {
   const detail = document.getElementById(`ums-expand-${idx}`);
   const btn    = document.querySelector(`#ums-row-${idx} .expand-btn`);
+  if (!detail) return;
   const isOpen = detail.style.display !== 'none';
   detail.style.display = isOpen ? 'none' : 'table-row';
-  btn.textContent = isOpen ? '▶' : '▼';
+  if (btn) btn.textContent = isOpen ? '▶' : '▼';
 }
 
 function searchFromUms(orderNo, poNo) {
   nav('search');
-  const vals = [orderNo, poNo].filter(v => v && v !== 'NS').join(', ');
+  const vals = [orderNo, poNo].filter(v => v && v !== 'Multiple' && v !== '').join(', ');
   document.getElementById('search-input').value = vals;
   doSearch();
 }
 
 function exportUmsResults() {
-  showToast('Export feature — requires SheetJS integration (coming soon)', 'ok');
+  if (!umsDisplayRows.length) { showToast('No results to export', 'err'); return; }
+  // Build CSV
+  const headers = ['Age','Document No.','Order No.','PO Number','Supplier','Mode','Billed Amount','Issue Date',
+    'Ship From','Ship To','OTM Match','OTM Shipment Id','OTM Carrier','BTF Status','USB Status','Matched By'];
+  const csvRows = [headers.join(',')];
+  umsDisplayRows.forEach(row => {
+    const otm = row.otmShipment;
+    const cols = [
+      row.age,
+      `"${row.documentNumber||''}"`,
+      `"${row.orderNumber||''}"`,
+      `"${row.poNumber||''}"`,
+      `"${row.supplier||''}"`,
+      `"${row.mode||''}"`,
+      row.billedAmount != null ? row.billedAmount : '',
+      `"${row.issueDate||''}"`,
+      `"${row.shipFromName||''} ${row.shipFromCity||''}"`,
+      `"${row.shipToName||''} ${row.shipToCity||''}"`,
+      row.matchStatus === 'found' ? 'Found' : 'Not Found',
+      `"${otm?.shipmentXid||''}"`,
+      `"${otm?.carrier||''}"`,
+      `"${otm?.statuses?.BTF_RATE_IND?.value||''}"`,
+      `"${otm?.statuses?.SENT_TO_USB?.value||''}"`,
+      `"${row.matchedBy === 'orderNumber' ? 'Order No.' : row.matchedBy === 'poNumber' ? 'PO No.' : ''}"`,
+    ];
+    csvRows.push(cols.join(','));
+  });
+  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `UMS_Reconciliation_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`✅ Exported ${umsDisplayRows.length} rows`, 'ok');
 }
 
 // ── REFRESH BAR ──
