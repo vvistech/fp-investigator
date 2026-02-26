@@ -974,36 +974,79 @@ async function runReconciliation() {
 }
 
 async function parseUmsFile(file) {
-  // Read as text for CSV, return structured rows
+  // Load SheetJS dynamically if not already present
+  if (typeof XLSX === 'undefined') {
+    await new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      s.onload = res; s.onerror = rej;
+      document.head.appendChild(s);
+    });
+  }
+
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const text = e.target.result;
-        const lines = text.split('\n').filter(l => l.trim());
-        if (lines.length < 2) { resolve([]); return; }
-        // Try to detect delimiter
-        const delim = lines[0].includes('\t') ? '\t' : ',';
-        const headers = lines[0].split(delim).map(h => h.trim().replace(/^"|"$/g,''));
-        const rows = lines.slice(1).map(line => {
-          const cols = line.split(delim).map(c => c.trim().replace(/^"|"$/g,''));
-          return {
-            documentNumber:      cols[0]  || '',
-            orderNumber:         cols[1]  || '',
-            financialStatusDate: cols[2]  || '',
-            financialStatus:     cols[3]  || '',
-            age:                 parseInt(cols[4]) || 0,
-            poNumber:            cols[6]  || '',
-            billedAmount:        parseFloat(cols[14]) || null,
-            issueDate:           cols[12] || '',
-          };
-        }).filter(r => r.documentNumber);
-        resolve(rows);
+        const isXlsx = file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.xls');
+
+        if (isXlsx) {
+          // ── XLSX path via SheetJS ──
+          const data    = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+          const sheet   = workbook.Sheets[workbook.SheetNames[0]];
+          // Get raw rows as arrays (no header inference — positional column mapping)
+          const raw = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+          if (raw.length < 2) { resolve([]); return; }
+
+          // Log header row to console for debugging column positions
+          console.log('UMS Headers:', raw[0]);
+
+          const rows = raw.slice(1).map(cols => {
+            const documentNumber      = String(cols[0]  ?? '').trim();
+            const orderNumber         = String(cols[1]  ?? '').trim();
+            const financialStatusDate = String(cols[2]  ?? '').trim();
+            const financialStatus     = String(cols[3]  ?? '').trim();
+            const ageRaw              = cols[4];
+            const age                 = typeof ageRaw === 'number' ? ageRaw : parseInt(ageRaw) || 0;
+            const poNumber            = String(cols[6]  ?? '').trim();
+            const issueDate           = String(cols[12] ?? '').trim();
+            const billedRaw           = cols[14];
+            const billedAmount        = typeof billedRaw === 'number' ? billedRaw : parseFloat(billedRaw) || null;
+            return { documentNumber, orderNumber, financialStatusDate, financialStatus, age, poNumber, billedAmount, issueDate };
+          }).filter(r => r.documentNumber && r.documentNumber !== '');
+
+          resolve(rows);
+        } else {
+          // ── CSV fallback ──
+          const text  = e.target.result;
+          const lines = text.split('\n').filter(l => l.trim());
+          if (lines.length < 2) { resolve([]); return; }
+          const delim = lines[0].includes('\t') ? '\t' : ',';
+          const rows  = lines.slice(1).map(line => {
+            const cols = line.split(delim).map(c => c.trim().replace(/^"|"$/g, ''));
+            return {
+              documentNumber:      cols[0]  || '',
+              orderNumber:         cols[1]  || '',
+              financialStatusDate: cols[2]  || '',
+              financialStatus:     cols[3]  || '',
+              age:                 parseInt(cols[4]) || 0,
+              poNumber:            cols[6]  || '',
+              billedAmount:        parseFloat(cols[14]) || null,
+              issueDate:           cols[12] || '',
+            };
+          }).filter(r => r.documentNumber);
+          resolve(rows);
+        }
       } catch(err) { reject(err); }
     };
     reader.onerror = reject;
-    // Try CSV first; xlsx would need SheetJS (can be added later)
-    reader.readAsText(file);
+    // Use ArrayBuffer for xlsx, text for csv
+    if (file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.xls')) {
+      reader.readAsArrayBuffer(file);
+    } else {
+      reader.readAsText(file);
+    }
   });
 }
 
